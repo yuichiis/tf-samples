@@ -327,7 +327,7 @@ class DecHexDataset:
         word_dic: dict,
         output_buf: NDArray)
     {
-        $sseq = list(input_string.upper());
+        sseq = list(input_string.upper());
         $len = count($sseq);
         $sp = $dic[' '];
         $bufsz=$buf->size();
