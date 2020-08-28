@@ -325,8 +325,8 @@ class DecHexDataset:
     def str2seq(
         input_string: str,
         word_dic: dict,
-        output_seq: ndarray)
-    {
+        output_seq: ndarray):
+            
         sseq = list(input_string.upper())
         seq_len = len(sseq)
         sp = word_dic[' ']
