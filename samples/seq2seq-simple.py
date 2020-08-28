@@ -323,11 +323,11 @@ class DecHexDataset:
     
     
     def str2seq(
-        input_word: str,
+        input_string: str,
         word_dic: dict,
         output_buf: NDArray)
     {
-        $sseq = str_split(input_word.upper());
+        $sseq = str_split(input_string.upper());
         $len = count($sseq);
         $sp = $dic[' '];
         $bufsz=$buf->size();
