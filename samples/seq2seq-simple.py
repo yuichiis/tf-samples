@@ -366,6 +366,7 @@ class DecHexDataset:
             )
 
     def loadData(corp_size,path=None):
+    '''load dataset'''
     {
         $this->length = strlen(strval($corp_size));
         if($path==null){
