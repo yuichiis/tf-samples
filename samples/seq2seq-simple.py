@@ -368,7 +368,7 @@ class DecHexDataset:
     def loadData(corp_size,path=None):
         '''load dataset'''
         self.length = len(str(corp_size))
-        if($path==null){
+        if path is None:
             $path='dec2hex-dataset.pkl';
         }
         if(file_exists($path)){
