@@ -352,7 +352,7 @@ class DecHexDataset:
 
     def translate(
         model,
-        input_str: str):
+        input_str: str) -> str:
     '''translate sentence'''
         inputs = np.zeros([1,self.length])
         self.str2seq(
