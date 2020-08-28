@@ -337,17 +337,17 @@ class DecHexDataset:
             else:
                 output_seq[i]=sp
 
-    public function seq2str(
-        NDArray $buf,
-        array $dic
+    def seq2str(
+        input_seq: ndarray,
+        word_dic: dict
         )
     {
-        $str = '';
-        $bufsz=$buf->size();
-        for($i=0;$i<$bufsz;$i++){
-            $str .= $dic[$buf[$i]];
+        outout_str = '';
+        bufsz=input_seq.size;
+        for i in range(bufsz):
+            output_str += word_dic[input_buf[i]]
         }
-        return $str;
+        return output_str
     }
 
     public function translate($model,$str)
