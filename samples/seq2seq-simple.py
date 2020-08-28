@@ -325,10 +325,10 @@ class DecHexDataset:
     def str2seq(
         input_string: str,
         word_dic: dict,
-        output_buf: NDArray)
+        output_seq: NDArray)
     {
         sseq = list(input_string.upper());
-        $len = count($sseq);
+        seq_len = len(sseq);
         $sp = $dic[' '];
         $bufsz=$buf->size();
         for($i=0;$i<$bufsz;$i++){
