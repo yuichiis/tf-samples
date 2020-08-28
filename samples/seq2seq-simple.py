@@ -331,11 +331,11 @@ class DecHexDataset:
         seq_len = len(sseq);
         sp = word_dic[' '];
         bufsz=output_seq.size;
-        for($i=0;$i<$bufsz;$i++){
-            if($i<$len)
-                $buf[$i]=$dic[$sseq[$i]];
-            else
-                $buf[$i]=$sp;
+        for i in range(bufsz):
+            if i<seq_len:
+                output_seq[i] = word_dic[sseq[i]]
+            else:
+                output_seq[i]=sp
         }
     }
 
