@@ -365,7 +365,7 @@ class DecHexDataset:
             self.vocab_target
             )
 
-    public function loadData($corp_size,$path=null)
+    def loadData(corp_size,path=None)
     {
         $this->length = strlen(strval($corp_size));
         if($path==null){
