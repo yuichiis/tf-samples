@@ -336,8 +336,6 @@ class DecHexDataset:
                 output_seq[i] = word_dic[sseq[i]]
             else:
                 output_seq[i]=sp
-        }
-    }
 
     public function seq2str(
         NDArray $buf,
