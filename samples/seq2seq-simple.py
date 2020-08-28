@@ -322,10 +322,10 @@ class DecHexDataset:
     
     
     
-    public function str2seq(
-        string $str,
-        array $dic,
-        NDArray $buf)
+    def str2seq(
+        input_word: str,
+        word_dic: dict,
+        output_buf: NDArray)
     {
         $sseq = str_split(strtoupper($str));
         $len = count($sseq);
