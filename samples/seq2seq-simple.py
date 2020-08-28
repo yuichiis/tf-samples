@@ -354,7 +354,6 @@ class DecHexDataset:
         model,
         input_str: str):
     '''translate sentence'''
-    {
         inputs = np.zeros([1,self.length])
         self.str2seq(
             input_str,
@@ -365,7 +364,6 @@ class DecHexDataset:
             target,
             self.vocab_target
             )
-    }
 
     public function loadData($corp_size,$path=null)
     {
