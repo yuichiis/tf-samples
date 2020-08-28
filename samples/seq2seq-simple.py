@@ -343,7 +343,7 @@ class DecHexDataset:
         )
     {
         outout_str = '';
-        bufsz=input_seq.size;
+        bufsz=input_seq.size
         for i in range(bufsz):
             output_str += word_dic[input_buf[i]]
         }
