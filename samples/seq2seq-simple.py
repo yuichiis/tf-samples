@@ -355,7 +355,7 @@ class DecHexDataset:
         input_str: str):
     '''translate sentence'''
     {
-        $inputs = $this->mo->zeros([1,$this->length]);
+        inputs = np.zeros([1,$this->length]);
         $this->str2seq(
             $str,$this->dict_input,$inputs[0]);
         $target = $model->translate($inputs);
