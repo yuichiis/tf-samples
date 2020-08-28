@@ -355,9 +355,11 @@ class DecHexDataset:
         input_str: str):
     '''translate sentence'''
     {
-        inputs = np.zeros([1,$this->length]);
-        $this->str2seq(
-            $str,$this->dict_input,$inputs[0]);
+        inputs = np.zeros([1,self.length])
+        self.str2seq(
+            input_str,
+            self.dict_input,
+            inputs[0])
         $target = $model->translate($inputs);
         return $this->seq2str(
             $target,$this->vocab_target
