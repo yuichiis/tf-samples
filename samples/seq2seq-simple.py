@@ -340,13 +340,12 @@ class DecHexDataset:
     def seq2str(
         input_seq: ndarray,
         word_dic: dict
-        )
-    {
-        outout_str = '';
+        ) -> str:
+        outout_str = ''
         bufsz=input_seq.size
         for i in range(bufsz):
             output_str += word_dic[input_buf[i]]
-        }
+            
         return output_str
     }
 
