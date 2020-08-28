@@ -348,7 +348,6 @@ class DecHexDataset:
             output_str += word_dic[input_buf[i]]
             
         return output_str
-    }
 
     public function translate($model,$str)
     {
