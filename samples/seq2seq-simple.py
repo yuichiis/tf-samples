@@ -302,6 +302,7 @@ class DecHexDataset:
         )
 
     def generate(self,corp_size,length):
+        '''generate random sequence'''
         sequence = np.zeros([corp_size,length])
         target = np.zeros([corp_size,length])
         numbers = np.random.choice(corp_size,corp_size)
