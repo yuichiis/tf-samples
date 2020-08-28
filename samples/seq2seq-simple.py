@@ -328,9 +328,9 @@ class DecHexDataset:
         output_seq: ndarray)
     {
         sseq = list(input_string.upper());
-        seq_len = len(sseq);
-        sp = word_dic[' '];
-        bufsz=output_seq.size;
+        seq_len = len(sseq)
+        sp = word_dic[' ']
+        bufsz=output_seq.size
         for i in range(bufsz):
             if i<seq_len:
                 output_seq[i] = word_dic[sseq[i]]
