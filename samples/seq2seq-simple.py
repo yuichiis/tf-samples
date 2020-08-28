@@ -350,7 +350,9 @@ class DecHexDataset:
             
         return output_str
 
-    public function translate($model,$str)
+    def translate(
+        model,
+        input_str)
     {
         $inputs = $this->mo->zeros([1,$this->length]);
         $this->str2seq(
