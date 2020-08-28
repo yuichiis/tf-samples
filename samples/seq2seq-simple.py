@@ -326,7 +326,7 @@ class DecHexDataset:
         input_string: str,
         word_dic: dict,
         output_seq: ndarray):
-            
+        '''translate string to sequence'''
         sseq = list(input_string.upper())
         seq_len = len(sseq)
         sp = word_dic[' ']
@@ -341,6 +341,7 @@ class DecHexDataset:
         input_seq: ndarray,
         word_dic: dict
         ) -> str:
+        '''translate string to sequence'''
         outout_str = ''
         bufsz=input_seq.size
         for i in range(bufsz):
