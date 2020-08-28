@@ -360,10 +360,11 @@ class DecHexDataset:
             input_str,
             self.dict_input,
             inputs[0])
-        $target = $model->translate($inputs);
-        return $this->seq2str(
-            $target,$this->vocab_target
-            );
+        target = model.translate(inputs)
+        return self.seq2str(
+            target,
+            self.vocab_target
+            )
     }
 
     public function loadData($corp_size,$path=null)
