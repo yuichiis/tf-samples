@@ -371,8 +371,8 @@ class DecHexDataset:
         if path is None:
             path='dec2hex-dataset.pkl'
             
-        if os.path.exists(path){
-            $pkl = file_get_contents($path);
+        if os.path.exists(path):
+            pkl = file_get_contents($path);
             $dataset = unserialize($pkl);
         }else{
             $dataset = $this->generate($corp_size,$this->length);
