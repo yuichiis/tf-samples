@@ -283,6 +283,8 @@ class Seq2seq extends AbstractModel
     }
 }
 
+
+
 class DecHexDataset:
 
     def __init__(self):
@@ -303,22 +305,23 @@ class DecHexDataset:
         sequence = np.zeros([corp_size,length])
         target = np.zeros([corp_size,length])
         numbers = np.random.choice(corp_size,corp_size)
-        for($i=0;$i<$corp_size;$i++){
-            $num = $numbers[$i];
-            $dec = strval($num);
-            $hex = dechex($num);
-            $this->str2seq(
-                $dec,
-                $this->dict_input,
-                $sequence[$i]);
-            $this->str2seq(
-                $hex,
-                $this->dict_target,
-                $target[$i]);
-        }
-        return [$sequence,$target];
-    }
-
+        for i in range(corp_size):
+            num = numbers[i];
+            dec = str(num);
+            hex = hex(num);
+            self.str2seq(
+                dec,
+                self.dict_input,
+                sequence[i]);
+            self.str2seq(
+                hex,
+                self.dict_target,
+                target[i])
+        
+        return [sequence,target]
+    
+    
+    
     public function str2seq(
         string $str,
         array $dic,
