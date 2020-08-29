@@ -102,8 +102,8 @@ class Decoder(keras.Model):
     protected $dense;
     '''
     def __init__(
-        string $rnn,
-        int $input_length,
+        rnn: str,
+        input_length: int,
         int $vocab_size,
         int $word_vect_size,
         int $recurrent_units,
