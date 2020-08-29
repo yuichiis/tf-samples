@@ -381,6 +381,7 @@ class DecHexDataset:
                 pickle.dump(dataset)
         return dataset
 
+
 $rnn = 'lstm';
 $corp_size = 10000;
 $test_size = 100;
