@@ -270,7 +270,7 @@ class Seq2seq(keras.Model):
         
 
     def translate(self,
-        sentence: ndarray) -> ndarray
+        sentence: ndarray) -> ndarray:
         '''translate sequence'''
         input_length = sentence.size
         sentence = sentence.reshape([1,input_length])
