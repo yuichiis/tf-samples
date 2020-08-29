@@ -238,7 +238,7 @@ class Seq2seq(keras.Model):
         return result
     }
 
-    def forwardStep(
+    def call(
         inputs: ndarray,
         trues=None: ndarray,
         training=None: bool
