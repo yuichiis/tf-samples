@@ -229,12 +229,6 @@ class Seq2seq(keras.Model):
         self.start_voc_id = start_voc_id
     }
 
-    protected function buildLayers(array $options=null) : void
-    {
-        $this->registerLayer($this->encoder);
-        $shape = $this->registerLayer($this->decoder);
-        $this->registerLayer($this->out,$shape);
-    }
 
     protected function shiftSentence(
         NDArray $sentence)
