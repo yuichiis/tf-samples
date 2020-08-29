@@ -271,15 +271,6 @@ class Seq2seq(keras.Model):
         return {m.name: m.result() for m in self.metrics}
         
 
-    protected function backwardStep(NDArray $dout) : NDArray
-    {
-        $K = $this->backend;
-        $dout = $this->out->backward($dout);
-        [$dummy,$dStates] = $this->decoder->backward($dout,null);
-        [$dInputs,$dStates] = $this->encoder->backward($K->zeros($this->encoutShape),$dStates);
-        return $dInputs;
-    }
-
     public function translate(NDArray $sentence)
     {
         $K = $this->backend;
