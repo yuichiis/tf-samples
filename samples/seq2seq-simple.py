@@ -202,7 +202,7 @@ class Seq2seq(keras.Model):
         recurrent_units: units of the recurrent layer
         dense_units: units of the full connection layer
         start_voc_id: vocabulary id of start word in input sequence
-    '''
+        '''
         super(Seq2seq, self).__init__(**kwargs)
         self.encoder = Encoder(
             rnn,
