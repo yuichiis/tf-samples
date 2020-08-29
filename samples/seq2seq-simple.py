@@ -101,7 +101,7 @@ class Decoder(keras.Model):
     protected $rnn;
     protected $dense;
     '''
-    public function __construct(
+    def __init__(
         $backend,
         $builder,
         string $rnn,
