@@ -275,7 +275,7 @@ class Seq2seq(keras.Model):
         input_length = sentence.size
         sentence = sentence.reshape([1,input_length])
         dmy,states=self.encoder(sentence,training=True)
-        voc_id = self.start_voc_id;
+        voc_id = self.start_voc_id
         target_sentence =[]
         for i in range(input_length):
             inp = np.array([[$vocId]])
