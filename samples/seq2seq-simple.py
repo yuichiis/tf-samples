@@ -116,11 +116,11 @@ class Decoder(keras.Model):
         self.vocab_size = vocab_size
         self.word_vect_size = word_vect_size
         self.recurrent_size = recurrent_units
-        self.dense_units = dense_units;
+        self.dense_units = dense_units
 
-        $this->embedding = $builder->layers()->Embedding($vocab_size, $word_vect_size);
-        $this->rnnName = $rnn;
-        if($rnn=='simple') {
+        self.embedding = keras.layers.Embedding(vocab_size, word_vect_size)
+        self.rnn_name = rnn
+        if rnn=='simple':
             $this->rnn = $builder->layers()->SimpleRNN(
                 $recurrent_units,[
                     'return_state'=>true,
