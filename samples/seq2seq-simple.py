@@ -238,7 +238,8 @@ class Seq2seq(keras.Model):
         return result
     }
 
-    protected function forwardStep(NDArray $inputs, NDArray $trues=null, bool $training=null) : NDArray
+    def forwardStep(
+        inputs: ndarray, NDArray $trues=null, bool $training=null) : NDArray
     {
         $K = $this->backend;
         [$dummy,$states] = $this->encoder->forward($inputs,$training,null);
