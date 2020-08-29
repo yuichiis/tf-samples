@@ -282,9 +282,8 @@ class Seq2seq(keras.Model):
             predictions,states = self.decoder(inp,training=False,states)
             voc_id = np.argmax(predictions)
             target_sentence.append(voc_id)
-        }
-        $this->setShapeInspection(true);
-        return $K->array($targetSentence);
+        
+        return np.array(target_sentence)
     }
 }
 
