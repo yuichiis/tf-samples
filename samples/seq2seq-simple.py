@@ -206,8 +206,8 @@ class Seq2seq(keras.Model):
     dense_units: units of the full connection layer
     start_voc_id: vocabulary id of start word in input sequence
     '''
-        extract($this->extractArgs([
-        ],$options));
+        super(Seq2seq, self).__init__(**kwargs)
+        
         parent::__construct($backend,$builder,$builder->utils()->HDA());
         $this->encoder = new Encoder(
             $backend,$builder,
