@@ -250,6 +250,7 @@ class Seq2seq(keras.Model):
         outputs = self.out(outputs,training)
         return outputs
     
+    
     def train_step(self,
         inputs,
         trues,
