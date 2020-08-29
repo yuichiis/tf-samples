@@ -248,7 +248,7 @@ class Seq2seq(keras.Model):
         dec_inputs = self.shiftSentence(trues);
         [outputs,dummy] = self.decoder(dec_inputs,training,states)
         outputs = self.out(outputs,training)
-        return $outputs;
+        return outputs
     }
 
     protected function backwardStep(NDArray $dout) : NDArray
