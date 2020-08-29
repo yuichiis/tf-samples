@@ -275,7 +275,7 @@ class Seq2seq(keras.Model):
         input_length = sentence.size
         sentence = sentence.reshape([1,input_length])
         dmy,states=self.encoder(sentence,training=True)
-        $vocId = $this->startVocId;
+        voc_id = self.start_voc_id;
         $targetSentence =[];
         for($i=0;$i<$inputLength;$i++){
             $in = $K->array([[$vocId]]);
