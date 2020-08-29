@@ -134,7 +134,7 @@ class Decoder(keras.Model):
             )
         else:
             raise Exception('unknown rnn type: '+rnn)
-        }
+        
         $this->dense = $builder->layers()->Dense($dense_units);
     }
 
