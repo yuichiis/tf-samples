@@ -141,7 +141,7 @@ class Decoder(keras.Model):
         inputs: ndarray,
         training: bool,
         initalStates: ndarray=None,
-        **kwargs):
+        **kwargs) -> tuple:
             
         wordvect = self.embedding(inputs,training)
         outputs,states=self.rnn(wordvect,training,initalStates)
