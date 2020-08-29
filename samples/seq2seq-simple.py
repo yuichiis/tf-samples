@@ -343,7 +343,9 @@ class DecHexDataset:
             self.vocab_target
             )
 
-    def loadData(corp_size,path=None):
+    def loadData(
+        corp_size:int,
+        path=None):
         '''load dataset'''
         self.length = len(str(corp_size))
         if path is None:
