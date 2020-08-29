@@ -140,7 +140,7 @@ class Decoder(keras.Model):
     def call(
         inputs: ndarray,
         training: bool,
-        initalStates=None,
+        initalStates: ndarray=None,
         **kwargs):
             
         wordvect = self.embedding(inputs,training)
