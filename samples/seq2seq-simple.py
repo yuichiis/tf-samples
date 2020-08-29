@@ -271,7 +271,7 @@ class DecHexDataset:
         self.dict_input = dict((v,k) for k,v in self.vocab_input.items())
         self.dict_target = dict((v,k) for k,v in self.vocab_target.items())
 
-    def dicts(self):
+    def dicts(self) -> tuple:
         return (
             self.vocab_input,
             self.vocab_target,
@@ -281,7 +281,7 @@ class DecHexDataset:
 
     def generate(self,
         corp_size: int,
-        length: int) -> list:
+        length: int) -> tuple:
         '''generate random sequence'''
         sequence = np.zeros([corp_size,length])
         target = np.zeros([corp_size,length])
