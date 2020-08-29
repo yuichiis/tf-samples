@@ -373,7 +373,7 @@ class DecHexDataset:
             
         if os.path.exists(path):
             with open(path,'rb') as fp:
-                pkl = fp.read(-1)
+                pkl = pickle.load(fp)
             dataset = unserialize($pkl);
         }else{
             $dataset = $this->generate($corp_size,$this->length);
