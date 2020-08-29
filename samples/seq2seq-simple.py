@@ -255,7 +255,7 @@ class Seq2seq(keras.Model):
     ):
         inputs,trues = train_data
         with tf.GradientTape() as tape:
-            outputs = self.forwardStep(inputs,trues,True)
+            outputs = self(inputs,trues,True)
             loss = self.compiled_loss(
                 trues,outputs,
                 regularization_losses=self.losses)
