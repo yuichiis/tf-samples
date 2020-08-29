@@ -345,7 +345,7 @@ class DecHexDataset:
 
     def loadData(
         corp_size: int,
-        path=None):
+        path: str=None) -> ndarray:
         '''load dataset'''
         self.length = len(str(corp_size))
         if path is None:
