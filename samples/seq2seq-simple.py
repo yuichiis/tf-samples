@@ -246,8 +246,8 @@ class Seq2seq(keras.Model):
         '''forward step'''
         [dummy,states] = self.encoder(inputs,training,null)
         dec_inputs = self.shiftSentence(trues);
-        [$outputs,$dummy] = $this->decoder->forward($dec_inputs,$training,$states);
-        $outputs = $this->out->forward($outputs,$training);
+        [outputs,dummy] = self.decoder(dec_inputs,training,states)
+        outputs = $this->out->forward($outputs,$training);
         return $outputs;
     }
 
