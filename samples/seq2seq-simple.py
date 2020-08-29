@@ -234,7 +234,7 @@ class Seq2seq(keras.Model):
         '''shift target sequence to learn'''
         result = np.zerosLike(sentence)
         result[:,1:] = sequence[:,:-2]
-        result[:,0] = 
+        result[:,0] = self.start_voc_id
         return result
     }
 
