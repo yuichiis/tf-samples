@@ -266,6 +266,9 @@ class Seq2seq(keras.Model):
         self.optimizer.apply_gradients(zip(gradients, variables))
 
         return batch_loss
+        self.compiled_metrics.update_state(trues, outputs)
+        # Return a dict mapping metric names to current value
+        return {m.name: m.result() for 
         
 
     protected function backwardStep(NDArray $dout) : NDArray
