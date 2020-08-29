@@ -251,19 +251,19 @@ class Seq2seq(keras.Model):
         return outputs
     
     def train_step(self,
-        inputs,
-        trues,
+        train_data
     ):
+        inputs,trues = train_data
         with tf.GradientTape() as tape:
             outputs = self.forwardStep(inputs,trues,True)
-            loss = self.loss_function(
+            loss = self.compiled_loss(
                 trues,outputs)
                 
         variables = encoder.trainable_variables + decoder.trainable_variables
 
         gradients = tape.gradient(loss, variables)
 
-        optimizer.apply_gradients(zip(gradients, variables))
+        self.optimizer.apply_gradients(zip(gradients, variables))
 
         return batch_loss
         
