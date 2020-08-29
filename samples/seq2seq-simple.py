@@ -181,10 +181,6 @@ class Decoder extends AbstractRNNLayer
 }
 
 class Seq2seq(keras.Model):
-{
-    protected $encode;
-    protected $decode;
-    protected $encoutShape;
 
     def __init__(
         rnn=None,
