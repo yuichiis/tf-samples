@@ -109,13 +109,14 @@ class Decoder(keras.Model):
         recurrent_units: int,
         dense_units: int
     )
-    {
-        $this->backend = $backend;
-        $this->inputShape=[$input_length];
-        $this->vocabSize = $vocab_size;
-        $this->wordVectSize = $word_vect_size;
-        $this->recurrentSize = $recurrent_units;
-        $this->denseUnits = $dense_units;
+        '''
+        Decoder
+        '''
+        self.input_shape=[input_length]
+        self.vocab_size = vocab_size
+        self.word_vect_size = word_vect_size
+        self.recurrent_size = recurrent_units
+        self.dense_units = dense_units;
 
         $this->embedding = $builder->layers()->Embedding($vocab_size, $word_vect_size);
         $this->rnnName = $rnn;
