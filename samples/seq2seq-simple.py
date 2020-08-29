@@ -243,7 +243,7 @@ class Seq2seq(keras.Model):
         trues=None: ndarray,
         training=null: bool
         ) -> ndarray:
-    {
+        '''forward step'''
         $K = $this->backend;
         [$dummy,$states] = $this->encoder->forward($inputs,$training,null);
         $this->encoutShape = $dummy->shape();
