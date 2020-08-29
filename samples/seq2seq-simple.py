@@ -199,6 +199,8 @@ class Seq2seq(keras.Model):
     '''
     rnn: 'simple' or 'lstm'
     input_vocab_size: vocabulary dictionary size for input sequence
+    target_vocab_size: vocabulary dictionary size for target sequence
+    word_vect_size: word vector size of embedding layer
     '''
         extract($this->extractArgs([
         ],$options));
