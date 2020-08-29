@@ -256,7 +256,7 @@ class Seq2seq(keras.Model):
     ):
         with tf.GradientTape() as tape:
             outputs = self.forwardStep(inputs,trues,True)
-            loss += self.loss_function(
+            loss = self.loss_function(
                 trues,outputs)
 
     protected function backwardStep(NDArray $dout) : NDArray
