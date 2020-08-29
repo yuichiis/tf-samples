@@ -251,6 +251,7 @@ class Seq2seq(keras.Model):
     ):
         '''train step callback'''
         inputs,trues = train_data
+        
         with tf.GradientTape() as tape:
             outputs = self(inputs,trues,True)
             loss = self.compiled_loss(
