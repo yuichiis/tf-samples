@@ -180,7 +180,7 @@ class Decoder extends AbstractRNNLayer
     }
 }
 
-class Seq2seq extends AbstractModel
+class Seq2seq(keras.Model) extends AbstractModel
 {
     use GenericUtils;
     protected $encode;
