@@ -258,6 +258,7 @@ class Seq2seq(keras.Model):
             outputs = self.forwardStep(inputs,trues,True)
             loss = self.loss_function(
                 trues,outputs)
+                
         variables = encoder.trainable_variables + decoder.trainable_variables
 
         gradients = tape.gradient(loss, variables)
