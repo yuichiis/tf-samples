@@ -193,15 +193,15 @@ class Seq2seq(keras.Model):
         start_voc_id=0,
         **kwargs
     )
-    '''
-    rnn: 'simple' or 'lstm'
-    input_length: input sequence length
-    input_vocab_size: vocabulary dictionary size for input sequence
-    target_vocab_size: vocabulary dictionary size for target sequence
-    word_vect_size: word vector size of embedding layer
-    recurrent_units: units of the recurrent layer
-    dense_units: units of the full connection layer
-    start_voc_id: vocabulary id of start word in input sequence
+        '''
+        rnn: 'simple' or 'lstm'
+        input_length: input sequence length
+        input_vocab_size: vocabulary dictionary size for input sequence
+        target_vocab_size: vocabulary dictionary size for target sequence
+        word_vect_size: word vector size of embedding layer
+        recurrent_units: units of the recurrent layer
+        dense_units: units of the full connection layer
+        start_voc_id: vocabulary id of start word in input sequence
     '''
         super(Seq2seq, self).__init__(**kwargs)
         self.encoder = Encoder(
