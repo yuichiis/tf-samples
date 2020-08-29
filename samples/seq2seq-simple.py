@@ -231,7 +231,7 @@ class Seq2seq(keras.Model):
 
 
     def shiftSentence(
-        ndarray sentence) -> ndarray
+        ndarray sentence) -> ndarray:
     {
         $K = $this->backend;
         $result = $K->zerosLike($sentence);
