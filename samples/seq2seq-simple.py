@@ -269,7 +269,7 @@ class Seq2seq(keras.Model):
         return batch_loss
         self.compiled_metrics.update_state(trues, outputs)
         # Return a dict mapping metric names to current value
-        return {m.name: m.result() for 
+        return {m.name: m.result() for m in self.metrics}
         
 
     protected function backwardStep(NDArray $dout) : NDArray
