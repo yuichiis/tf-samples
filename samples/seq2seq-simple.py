@@ -374,17 +374,13 @@ class DecHexDataset:
             
         if os.path.exists(path):
             with open(path,'rb') as fp:
-                pkl = pickle.load(fp)
-            dataset = unserialize($pkl);
-        }else{
-            $dataset = $this->generate($corp_size,$this->length);
-            $pkl = serialize($dataset);
-            file_put_contents($path,$pkl);
-        }
-        return $dataset;
-    }
+                dataset = pickle.load(fp)
+        else:
+            dataset = self.generate(corp_size,self.length)
+            with open(path,'wb') as fp:
+                pickle.dump(dataset)
+        return dataset
 
-}
 $rnn = 'lstm';
 $corp_size = 10000;
 $test_size = 100;
