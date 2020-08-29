@@ -132,8 +132,8 @@ class Decoder(keras.Model):
                 return_state=True,
                 return_sequence=True,
             )
-        } else {
-            throw new InvalidArgumentException('unknown rnn type: '.$rnn);
+        else:
+            raise Exception('unknown rnn type: '+rnn);
         }
         $this->dense = $builder->layers()->Dense($dense_units);
     }
