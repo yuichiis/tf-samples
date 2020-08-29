@@ -137,7 +137,10 @@ class Decoder(keras.Model):
         
         self.dense = self.layers.Dense(dense_units)
         
-    def call(NDArray $inputs,bool $training, array $initalStates=null, array $options=null)
+    def call(
+        inputs: ndarray,
+        training: bool,
+        initalStates=None: ndarray, array $options=null)
     {
         $wordvect = $this->embedding->forward($inputs,$training);
         [$outputs,$states]=$this->rnn->forward($wordvect,$training,$initalStates);
