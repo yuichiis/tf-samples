@@ -232,8 +232,8 @@ class Seq2seq(keras.Model):
     def shiftSentence(
         ndarray sentence) -> ndarray:
         '''shift target sequence to learn'''
-        $K = $this->backend;
-        $result = $K->zerosLike($sentence);
+        result = np.zerosLike(sentence)
+        result[:,1:] = sequence[:,-2]
         [$batches,$length] = $sentence->shape();
         for($batch=0;$batch<$batches;$batch++){
             $source = $sentence[$batch][[0,$length-2]];
