@@ -182,22 +182,25 @@ class Decoder extends AbstractRNNLayer
 
 class Seq2seq(keras.Model):
 {
-    use GenericUtils;
     protected $encode;
     protected $decode;
     protected $encoutShape;
 
-    public function __construct($backend,$builder,array $options=null)
-    {
+    def __init__(
+        rnn=None,
+        input_length=None,
+        input_vocab_size=None,
+        target_vocab_size=None,
+        word_vect_size=8,
+        recurrent_units=256,
+        dense_units=256,
+        start_voc_id=0,
+    )
+    '''
+    rnn: 'simple' or 'lstm'
+    input_vocab_size: vocabulary dictionary size
+    '''
         extract($this->extractArgs([
-            'rnn'=>null,
-            'input_length'=>null,
-            'input_vocab_size'=>null,
-            'target_vocab_size'=>null,
-            'word_vect_size'=>8,
-            'recurrent_units'=>256,
-            'dense_units'=>256,
-            'start_voc_id'=>0,
         ],$options));
         parent::__construct($backend,$builder,$builder->utils()->HDA());
         $this->encoder = new Encoder(
