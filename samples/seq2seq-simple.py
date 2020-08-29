@@ -140,7 +140,7 @@ class Decoder(keras.Model):
     def call(
         inputs: ndarray,
         training: bool,
-        initalStates=None: ndarray,
+        initalStates=None,
         **kwargs)
     {
         $wordvect = $this->embedding->forward($inputs,$training);
