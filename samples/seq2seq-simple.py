@@ -283,8 +283,6 @@ class Seq2seq(keras.Model):
             target_sentence.append(voc_id)
         
         return np.array(target_sentence)
-    }
-}
 
 
 class DecHexDataset:
