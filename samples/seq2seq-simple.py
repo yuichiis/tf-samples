@@ -299,7 +299,7 @@ class DecHexDataset:
                 self.dict_target,
                 target[i])
         
-        return [sequence,target]
+        return (sequence,target)
     
     
     
