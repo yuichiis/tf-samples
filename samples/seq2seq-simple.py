@@ -279,8 +279,8 @@ class Seq2seq(keras.Model):
         target_sentence =[]
         for i in range(input_length):
             inp = np.array([[$vocId]])
-            [$predictions,$states] = $this->decoder->forward($in,$training=false,$states);
-            $vocId = $K->argMax($predictions);
+            predictions,states = self.decoder(inp,training=False,states)
+            voc_id = np.argMax(predictions)
             $targetSentence[]=$vocId;
         }
         $this->setShapeInspection(true);
