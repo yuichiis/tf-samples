@@ -136,7 +136,7 @@ class Decoder(keras.Model):
             raise Exception('unknown rnn type: '+rnn)
         
         self.dense = self.layers.Dense(dense_units)
-    }
+    
 
     public function build(array $inputShape=null, array $options=null) : array
     {
