@@ -278,7 +278,7 @@ class Seq2seq(keras.Model):
         voc_id = self.start_voc_id;
         target_sentence =[]
         for i in range(input_length):
-            inp = $K->array([[$vocId]]);
+            inp = np.array([[$vocId]])
             [$predictions,$states] = $this->decoder->forward($in,$training=false,$states);
             $vocId = $K->argMax($predictions);
             $targetSentence[]=$vocId;
