@@ -268,7 +268,6 @@ class Seq2seq(keras.Model):
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
         
-
     def translate(self,
         sentence: ndarray) -> ndarray:
         '''translate sequence'''
