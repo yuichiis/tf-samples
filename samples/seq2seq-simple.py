@@ -208,8 +208,6 @@ class Seq2seq(keras.Model):
     start_voc_id: vocabulary id of start word in input sequence
     '''
         super(Seq2seq, self).__init__(**kwargs)
-        
-        parent::__construct($backend,$builder,$builder->utils()->HDA());
         $this->encoder = new Encoder(
             $backend,$builder,
             $rnn,
