@@ -274,8 +274,7 @@ class Seq2seq(keras.Model):
         '''translate sequence'''
         input_length = sentence.size
         sentence = sentence.reshape([1,input_length])
-        $this->setShapeInspection(false);
-        [$dmy,$states]=$this->encoder->forward($sentence,$training=false);
+        dmy,states=self.encoder(sentence,training)
         $vocId = $this->startVocId;
         $targetSentence =[];
         for($i=0;$i<$inputLength;$i++){
