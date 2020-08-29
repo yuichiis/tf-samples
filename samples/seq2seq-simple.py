@@ -140,7 +140,8 @@ class Decoder(keras.Model):
     def call(
         inputs: ndarray,
         training: bool,
-        initalStates=None: ndarray, array $options=null)
+        initalStates=None: ndarray,
+        **kwargs)
     {
         $wordvect = $this->embedding->forward($inputs,$training);
         [$outputs,$states]=$this->rnn->forward($wordvect,$training,$initalStates);
