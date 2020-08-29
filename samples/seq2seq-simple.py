@@ -225,7 +225,7 @@ class Seq2seq(keras.Model):
             dense_units,
             **kwargs
         )
-        $this->out = $builder->layers()->Activation('softmax');
+        self.out = keras.layers.Activation('softmax');
         $this->setLastLayer($this->out);
         $this->startVocId = $start_voc_id;
     }
