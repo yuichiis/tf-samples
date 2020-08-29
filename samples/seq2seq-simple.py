@@ -276,7 +276,7 @@ class Seq2seq(keras.Model):
         sentence = sentence.reshape([1,input_length])
         dmy,states=self.encoder(sentence,training=True)
         voc_id = self.start_voc_id;
-        $targetSentence =[];
+        target_sentence =[]
         for($i=0;$i<$inputLength;$i++){
             $in = $K->array([[$vocId]]);
             [$predictions,$states] = $this->decoder->forward($in,$training=false,$states);
