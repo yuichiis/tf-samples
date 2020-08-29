@@ -234,14 +234,8 @@ class Seq2seq(keras.Model):
         '''shift target sequence to learn'''
         result = np.zerosLike(sentence)
         result[:,1:] = sequence[:,:-2]
-        [$batches,$length] = $sentence->shape();
-        for($batch=0;$batch<$batches;$batch++){
-            $source = $sentence[$batch][[0,$length-2]];
-            $dest = $result[$batch][[1,$length-1]];
-            $result[$batch][0]=$this->startVocId;
-            $K->copy($source,$dest);
-        }
-        return $result;
+        result[:,0] = 
+        return result
     }
 
     protected function forwardStep(NDArray $inputs, NDArray $trues=null, bool $training=null) : NDArray
