@@ -145,8 +145,8 @@ class Decoder(keras.Model):
             
         wordvect = self.embedding(inputs,training)
         outputs,states=self.rnn(wordvect,training,initalStates)
-        $outputs=$this->dense->forward($outputs,$training);
-        return [$outputs,$states];
+        outputs=self.dense(outputs,training)
+        return [outputs,states]
     }
 
     protected function differentiate(NDArray $dOutputs, array $dNextStates=null)
