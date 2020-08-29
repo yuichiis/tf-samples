@@ -204,6 +204,7 @@ class Seq2seq(keras.Model):
     word_vect_size: word vector size of embedding layer
     recurrent_units: units of the recurrent layer
     dense_units: units of the full connection layer
+    start_voc_id: vocabulary id of start word in input sequence
     '''
         extract($this->extractArgs([
         ],$options));
