@@ -241,7 +241,7 @@ class Seq2seq(keras.Model):
     def forwardStep(
         inputs: ndarray,
         trues=None: ndarray,
-        training=null: bool
+        training=None: bool
         ) -> ndarray:
         '''forward step'''
         [dummy,states] = self.encoder(inputs,training,null)
@@ -249,7 +249,14 @@ class Seq2seq(keras.Model):
         [outputs,dummy] = self.decoder(dec_inputs,training,states)
         outputs = self.out(outputs,training)
         return outputs
-    }
+    
+    def train_step(self,
+        inputs,
+        trues,
+        training=None
+    ):
+        with tf.GradientTape() as tape:
+            
 
     protected function backwardStep(NDArray $dout) : NDArray
     {
