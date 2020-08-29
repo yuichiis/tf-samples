@@ -195,6 +195,7 @@ class Seq2seq(keras.Model):
         recurrent_units=256,
         dense_units=256,
         start_voc_id=0,
+        **kwargs
     )
     '''
     rnn: 'simple' or 'lstm'
