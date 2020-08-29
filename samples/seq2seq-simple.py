@@ -372,8 +372,9 @@ class DecHexDataset:
             path='dec2hex-dataset.pkl'
             
         if os.path.exists(path):
-            pkl = file_get_contents($path);
-            $dataset = unserialize($pkl);
+            with open(path,'rb') as fp:
+                pkl = fp.read(-1)
+            dataset = unserialize($pkl);
         }else{
             $dataset = $this->generate($corp_size,$this->length);
             $pkl = serialize($dataset);
