@@ -147,16 +147,7 @@ class Decoder(keras.Model):
         outputs,states=self.rnn(wordvect,training,initalStates)
         outputs=self.dense(outputs,training)
         return (outputs,states)
-    }
-
-    protected function differentiate(NDArray $dOutputs, array $dNextStates=null)
-    {
-        $dOutputs = $this->dense->backward($dOutputs);
-        [$dWordvect,$dStates]=$this->rnn->backward($dOutputs);
-        $dInputs = $this->embedding->backward($dWordvect);
-        return [$dInputs,$dStates];
-    }
-}
+    
 
 class Seq2seq(keras.Model):
 
