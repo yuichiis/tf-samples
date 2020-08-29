@@ -253,9 +253,9 @@ class Seq2seq(keras.Model):
     def train_step(self,
         inputs,
         trues,
-        training=None
     ):
         with tf.GradientTape() as tape:
+            self.forwardStep(inputs,trues,True)
             
 
     protected function backwardStep(NDArray $dout) : NDArray
