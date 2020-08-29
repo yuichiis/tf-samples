@@ -245,8 +245,7 @@ class Seq2seq(keras.Model):
         ) -> ndarray:
         '''forward step'''
         [dummy,states] = self.encoder(inputs,training,null)
-        $this->encoutShape = $dummy->shape();
-        $dec_inputs = $this->shiftSentence($trues);
+        dec_inputs = self.shiftSentence(trues);
         [$outputs,$dummy] = $this->decoder->forward($dec_inputs,$training,$states);
         $outputs = $this->out->forward($outputs,$training);
         return $outputs;
