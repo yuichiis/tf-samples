@@ -287,7 +287,6 @@ class Seq2seq(keras.Model):
 }
 
 
-
 class DecHexDataset:
 
     def __init__(self):
