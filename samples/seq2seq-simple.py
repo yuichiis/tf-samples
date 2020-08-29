@@ -208,23 +208,23 @@ class Seq2seq(keras.Model):
     start_voc_id: vocabulary id of start word in input sequence
     '''
         super(Seq2seq, self).__init__(**kwargs)
-        $this->encoder = new Encoder(
-            $backend,$builder,
-            $rnn,
-            $input_length,
-            $input_vocab_size,
-            $word_vect_size,
-            $recurrent_units
-        );
-        $this->decoder = new Decoder(
-            $backend,$builder,
-            $rnn,
-            $input_length,
-            $target_vocab_size,
-            $word_vect_size,
-            $recurrent_units,
-            $dense_units
-        );
+        self.encoder = Encoder(
+            rnn,
+            input_length,
+            input_vocab_size,
+            word_vect_size,
+            recurrent_units,
+            **kwargs
+        )
+        self.decoder = Decoder(
+            rnn,
+            input_length,
+            target_vocab_size,
+            word_vect_size,
+            recurrent_units,
+            dense_units,
+            **kwargs
+        )
         $this->out = $builder->layers()->Activation('softmax');
         $this->setLastLayer($this->out);
         $this->startVocId = $start_voc_id;
