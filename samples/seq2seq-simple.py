@@ -272,7 +272,6 @@ class Seq2seq(keras.Model):
     def translate(self,
         sentence: ndarray) -> ndarray
         '''translate sequence'''
-        $K = $this->backend;
         $inputLength = $sentence->size();
         $sentence = $sentence->reshape([1,$inputLength]);
         $this->setShapeInspection(false);
