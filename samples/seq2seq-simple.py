@@ -230,7 +230,7 @@ class Seq2seq(keras.Model):
     }
 
 
-    protected function shiftSentence(
+    def shiftSentence(
         NDArray $sentence)
     {
         $K = $this->backend;
