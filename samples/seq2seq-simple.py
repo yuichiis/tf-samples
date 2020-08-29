@@ -198,7 +198,7 @@ class Seq2seq(keras.Model):
     )
     '''
     rnn: 'simple' or 'lstm'
-    input_vocab_size: input vocabulary dictionary size
+    input_vocab_size: vocabulary dictionary size for input sequence
     '''
         extract($this->extractArgs([
         ],$options));
