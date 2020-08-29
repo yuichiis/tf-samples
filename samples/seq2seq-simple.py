@@ -198,6 +198,7 @@ class Seq2seq(keras.Model):
     )
     '''
     rnn: 'simple' or 'lstm'
+    input_length: input sequence length
     input_vocab_size: vocabulary dictionary size for input sequence
     target_vocab_size: vocabulary dictionary size for target sequence
     word_vect_size: word vector size of embedding layer
