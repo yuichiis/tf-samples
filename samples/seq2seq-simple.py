@@ -104,10 +104,10 @@ class Decoder(keras.Model):
     def __init__(
         rnn: str,
         input_length: int,
-        int $vocab_size,
-        int $word_vect_size,
-        int $recurrent_units,
-        int $dense_units
+        vocab_size: int,
+        word_vect_size: int,
+        recurrent_units: int,
+        dense_units: int
     )
     {
         $this->backend = $backend;
