@@ -269,7 +269,8 @@ class Seq2seq(keras.Model):
         return {m.name: m.result() for m in self.metrics}
         
 
-    public function translate(NDArray $sentence)
+    def translate(self,
+        sentence: ndarray) -> ndarray
     {
         $K = $this->backend;
         $inputLength = $sentence->size();
