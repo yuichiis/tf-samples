@@ -170,7 +170,7 @@ class Seq2seq(keras.Model):
         dense_units=256,
         start_voc_id=0,
         **kwargs
-    )
+    ):
         '''
         rnn: 'simple' or 'lstm'
         input_length: input sequence length
@@ -214,8 +214,8 @@ class Seq2seq(keras.Model):
 
     def call(
         inputs: ndarray,
-        trues=None: ndarray,
-        training=None: bool
+        trues: ndarray=None,
+        training: bool=None
         ) -> ndarray:
         '''forward step'''
         [dummy,states] = self.encoder(inputs,training,null)
@@ -225,8 +225,8 @@ class Seq2seq(keras.Model):
         return outputs
     
     def train_step(self,
-        train_data
-    ):
+        train_data: tuple
+    ) -> dict:
         '''train step callback'''
         inputs,trues = train_data
         
