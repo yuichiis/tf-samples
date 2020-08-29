@@ -121,17 +121,17 @@ class Decoder(keras.Model):
         self.embedding = keras.layers.Embedding(vocab_size, word_vect_size)
         self.rnn_name = rnn
         if rnn=='simple':
-            $this->rnn = $builder->layers()->SimpleRNN(
-                $recurrent_units,[
-                    'return_state'=>true,
-                    'return_sequence'=>true,
-                ]);
-        } elseif($rnn=='lstm') {
-            $this->rnn = $builder->layers()->LSTM(
-                $recurrent_units,[
-                    'return_state'=>true,
-                    'return_sequence'=>true,
-                ]);
+            self.rnn = keras.layers.SimpleRNN(
+                recurrent_units,
+                return_state=True,
+                return_sequence=True,
+            )
+        elif rnn=='lstm':
+            self.rnn = ketas.layers.LSTM(
+                recurrent_units,
+                return_state=True,
+                return_sequence=True,
+            )
         } else {
             throw new InvalidArgumentException('unknown rnn type: '.$rnn);
         }
