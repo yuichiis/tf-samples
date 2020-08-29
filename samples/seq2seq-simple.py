@@ -144,7 +144,7 @@ class Decoder(keras.Model):
         **kwargs):
             
         wordvect = self.embedding(inputs,training)
-        [$outputs,$states]=$this->rnn->forward($wordvect,$training,$initalStates);
+        outputs,states=self.rnn(wordvect,training,initalStates)
         $outputs=$this->dense->forward($outputs,$training);
         return [$outputs,$states];
     }
