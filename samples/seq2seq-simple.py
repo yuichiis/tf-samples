@@ -89,8 +89,8 @@ class Encoder extends AbstractRNNLayer
     }
 }
 
-class Decoder extends AbstractRNNLayer
-{
+class Decoder(keras.Model):
+    '''
     protected $backend;
     protected $builder;
     protected $vocabSize;
@@ -100,7 +100,7 @@ class Decoder extends AbstractRNNLayer
     protected $embedding;
     protected $rnn;
     protected $dense;
-
+    '''
     public function __construct(
         $backend,
         $builder,
