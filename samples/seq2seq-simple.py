@@ -279,7 +279,9 @@ class DecHexDataset:
             self.dict_target,
         )
 
-    def generate(self,corp_size,length):
+    def generate(self,
+        corp_size: int,
+        length: int) -> list:
         '''generate random sequence'''
         sequence = np.zeros([corp_size,length])
         target = np.zeros([corp_size,length])
