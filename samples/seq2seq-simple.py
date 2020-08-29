@@ -273,7 +273,7 @@ class Seq2seq(keras.Model):
         sentence: ndarray) -> ndarray
         '''translate sequence'''
         input_length = sentence.size
-        $sentence = $sentence->reshape([1,$inputLength]);
+        sentence = sentence.reshape([1,input_length])
         $this->setShapeInspection(false);
         [$dmy,$states]=$this->encoder->forward($sentence,$training=false);
         $vocId = $this->startVocId;
