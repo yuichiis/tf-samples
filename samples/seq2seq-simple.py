@@ -344,7 +344,7 @@ class DecHexDataset:
             )
 
     def loadData(
-        corp_size:int,
+        corp_size: int,
         path=None):
         '''load dataset'''
         self.length = len(str(corp_size))
