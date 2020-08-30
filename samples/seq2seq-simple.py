@@ -113,7 +113,7 @@ class Decoder(keras.Model):
     def call(
         inputs: ndarray,
         training: bool,
-        initalStates: ndarray=None,
+        initalStates: tuple=None,
         **kwargs) -> tuple:
             
         wordvect = self.embedding(inputs,training)
