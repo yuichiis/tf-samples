@@ -324,7 +324,7 @@ iv,tv,input_dic,target_dic=dataset.dicts()
 input_vocab_size = len(input_dic)
 target_vocab_size = len(target_dic)
 
-echo "[".$dataset->seq2str($train_inputs[0],$dataset->vocab_input)."]=>[".$dataset->seq2str($train_target[0],$dataset->vocab_target)."]\n";
+print('['+dataset.seq2str(train_inputs[0],dataset.vocab_input)+']=>['+dataset.seq2str(train_target[0],dataset.vocab_target)+']\n')
 
 $seq2seq = new Seq2seq($backend,$nn,[
     'rnn'=>$rnn,
