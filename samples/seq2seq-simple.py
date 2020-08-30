@@ -91,8 +91,6 @@ class Encoder extends AbstractRNNLayer
 
 class Decoder(keras.Model):
     '''
-    protected $backend;
-    protected $builder;
     protected $vocabSize;
     protected $wordVectSize;
     protected $recurrentUnits;
