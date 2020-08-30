@@ -349,14 +349,14 @@ history = seq2seq.fit(
         test_input,test_target]
     )
 
-plt.plot(history.history['loss'],label='loss')
-plt.plot(history.history['accuracy'],label='accuracy')
-plt.plot(history.history['val_loss'],label='val_loss')
-plt.plot(history.history['val_accuracy'],label='val_accuracy')
-
 samples = ['10','255','1024'];
 for sequence in samples:
     target = dataset.translate(
         seq2seq,sequence)
     print('[%s]=>[%s]' % (sequence,target))
 
+plt.plot(history.history['loss'],label='loss')
+plt.plot(history.history['accuracy'],label='accuracy')
+plt.plot(history.history['val_loss'],label='val_loss')
+plt.plot(history.history['val_accuracy'],label='val_accuracy')
+plt.show()
