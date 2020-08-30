@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 
 print(keras.__version__)
 
-class Encoder(keras.Model) extends AbstractRNNLayer
-{
+class Encoder(keras.Model):
+    '''
     protected $backend;
     protected $builder;
     protected $vocabSize;
@@ -19,7 +19,7 @@ class Encoder(keras.Model) extends AbstractRNNLayer
     protected $recurrentUnits;
     protected $embedding;
     protected $rnn;
-
+    '''
     public function __construct(
         $backend,
         $builder,
