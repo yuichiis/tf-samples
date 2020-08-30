@@ -338,7 +338,8 @@ seq2seq = Seq2seq(
 )
 
 seq2seq.compile(
-    optimizer=keras.optimizers.Adam(),
+    optimizer='adam',
+    loss=keras.losses.Sparse
     )
 $history = $seq2seq->fit($train_inputs,$train_target,
     ['epochs'=>5,'batch_size'=>128,'validation_data'=>[$test_input,$test_target]]);
