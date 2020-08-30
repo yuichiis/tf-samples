@@ -6,6 +6,7 @@ import pickle
 
 import keras
 import numpy as np
+import numpy.ndarray
 import matplotlib.pyplot as plt
 
 print(keras.__version__)
