@@ -29,7 +29,7 @@ class Encoder(keras.Model):
         recurrent_units: int
     ):
         '''enconder'''
-        self.inputShape=[input_length]
+        self.input_shape=[input_length]
         self.vocab_size = vocab_size
         self.word_vect_size = word_vect_size
         self.recurrent_units = recurrent_units
