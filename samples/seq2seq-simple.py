@@ -249,7 +249,6 @@ class DecHexDataset:
         return (sequence,target)
     
     
-    
     def str2seq(
         input_string: str,
         word_dic: dict,
