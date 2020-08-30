@@ -350,8 +350,8 @@ history = seq2seq.fit(
     )
 
 samples = ['10','255','1024'];
-for value in samples:
+for sequence in samples:
     target = dataset.translate(
-        seq2seq,value)
+        seq2seq,sequence)
     print('[%s]=>[%s]' % (sequence,target))
-}
+
