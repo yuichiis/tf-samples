@@ -310,14 +310,11 @@ class DecHexDataset:
         return dataset
 
 
-$rnn = 'lstm';
-$corp_size = 10000;
-$test_size = 100;
-$mo = new MatrixOperator();
-$backend = new Backend($mo);
-$nn = new NeuralNetworks($mo,$backend);
-$dataset = new DecHexDataset($mo);
-[$dec,$hex]=$dataset->loadData($corp_size);
+rnn = 'lstm';
+corp_size = 10000;
+test_size = 100;
+dataset = new DecHexDataset($mo);
+dec_str,hex_str]=$dataset->loadData($corp_size);
 $train_inputs = $dec[[0,$corp_size-$test_size-1]];
 $train_target = $hex[[0,$corp_size-$test_size-1]];
 $test_input = $dec[[$corp_size-$test_size,$corp_size-1]];
