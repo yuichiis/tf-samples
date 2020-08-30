@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 print(keras.__version__)
 
-class Encoder extends AbstractRNNLayer
+class Encoder(keras.Model) extends AbstractRNNLayer
 {
     protected $backend;
     protected $builder;
