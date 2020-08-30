@@ -326,16 +326,16 @@ target_vocab_size = len(target_dic)
 
 print('['+dataset.seq2str(train_inputs[0],dataset.vocab_input)+']=>['+dataset.seq2str(train_target[0],dataset.vocab_target)+']\n')
 
-$seq2seq = new Seq2seq($backend,$nn,[
-    'rnn'=>$rnn,
-    'input_length'=>$input_length,
-    'input_vocab_size'=>$input_vocab_size,
-    'target_vocab_size'=>$target_vocab_size,
-    'start_voc_id'=>$dataset->dict_target['@'],
-    'word_vect_size'=>16,
-    'recurrent_units'=>512,
-    'dense_units'=>512,
-]);
+seq2seq = Seq2seq(
+    rnn=rnn,
+    input_length=input_length,
+    input_vocab_size=input_vocab_size,
+    target_vocab_size=target_vocab_size,
+    start_voc_id=dataset.dict_target['@'],
+    word_vect_size=16,
+    recurrent_units=512,
+    dense_units=512,
+)
 
 $seq2seq->compile([
     'optimizer'=>$nn->optimizers()->Adam(),
