@@ -21,14 +21,12 @@ class Encoder(keras.Model):
     protected $embedding;
     protected $rnn;
     '''
-    public function __construct(
-        $backend,
-        $builder,
-        string $rnn,
-        int $input_length,
-        int $vocab_size,
-        int $word_vect_size,
-        int $recurrent_units
+    def __init__(
+        rnn: str,
+        input_length: int,
+        vocab_size: int,
+        word_vect_size: int,
+        recurrent_units: int
     )
     {
         $this->backend = $backend;
