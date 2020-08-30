@@ -99,7 +99,7 @@ class Decoder(keras.Model):
         training: bool,
         initalStates: tuple=None,
         **kwargs) -> tuple:
-            
+        '''foward'''
         wordvect = self.embedding(inputs,training)
         outputs,states=self.rnn(wordvect,training,initalStates)
         outputs=self.dense(outputs,training)
