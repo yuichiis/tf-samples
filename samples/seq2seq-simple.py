@@ -349,6 +349,9 @@ history = seq2seq.fit(
         test_input,test_target]
     )
 
+plt.plot(history.history['loss'],label='loss')
+plt.plot(history.history['accuracy'],label='accuracy')
+
 samples = ['10','255','1024'];
 for sequence in samples:
     target = dataset.translate(
