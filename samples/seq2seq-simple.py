@@ -13,13 +13,7 @@ print(keras.__version__)
 
 class Encoder(keras.Model):
     '''
-    protected $backend;
-    protected $builder;
-    protected $vocabSize;
-    protected $wordVectSize;
-    protected $recurrentUnits;
-    protected $embedding;
-    protected $rnn;
+    encoder
     '''
     def __init__(
         rnn: str,
