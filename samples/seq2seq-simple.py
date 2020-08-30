@@ -28,8 +28,7 @@ class Encoder(keras.Model):
         word_vect_size: int,
         recurrent_units: int
     ):
-    {
-        $this->backend = $backend;
+        '''enconder'''
         $this->inputShape=[$input_length];
         $this->vocabSize = $vocab_size;
         $this->wordVectSize = $word_vect_size;
