@@ -34,7 +34,7 @@ class Encoder(keras.Model):
         self.word_vect_size = word_vect_size
         self.recurrent_units = recurrent_units
 
-        $this->embedding = keras.layers.Embedding(vocab_size, word_vect_size)
+        self.embedding = keras.layers.Embedding(vocab_size, word_vect_size)
         self.rnnName = rnn
         if rnn=='simple':
             self.rnn = keras.layers.SimpleRNN(
