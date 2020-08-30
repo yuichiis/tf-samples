@@ -56,19 +56,11 @@ class Encoder(keras.Model):
         training: bool,
         initalStates: tuple=None,
         **kwarg) -> tuple:
-    {
+        '''foward'''
         wordvect = self.embedding(inputs,training)
         outputs,states=srlf.rnn(wordvect,training,initalStates)
         return (outputs,states)
-    }
 
-    protected function differentiate(NDArray $dOutputs, array $dNextStates=null)
-    {
-        [$dWordvect,$dStates]=$this->rnn->backward($dOutputs,$dNextStates);
-        $dInputs = $this->embedding->backward($dWordvect);
-        return [$dInputs,$dStates];
-    }
-}
 
 class Decoder(keras.Model):
     '''
