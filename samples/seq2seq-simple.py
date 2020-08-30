@@ -55,7 +55,7 @@ class Encoder(keras.Model):
         inputs: ndarray,
         training: bool,
         initalStates: tuple=None,
-        **kwarg)
+        **kwarg) -> tuple:
     {
         $wordvect = $this->embedding->forward($inputs,$training);
         [$outputs,$states]=$this->rnn->forward($wordvect,$training,$initalStates);
