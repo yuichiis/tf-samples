@@ -57,9 +57,9 @@ class Encoder(keras.Model):
         initalStates: tuple=None,
         **kwarg) -> tuple:
     {
-        $wordvect = $this->embedding->forward($inputs,$training);
-        [$outputs,$states]=$this->rnn->forward($wordvect,$training,$initalStates);
-        return [$outputs,$states];
+        wordvect = self.embedding(inputs,training)
+        outputs,states=srlf.rnn(wordvect,training,initalStates)
+        return (outputs,states)
     }
 
     protected function differentiate(NDArray $dOutputs, array $dNextStates=null)
