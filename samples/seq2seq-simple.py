@@ -315,14 +315,14 @@ corp_size = 10000;
 test_size = 100;
 dataset = DecHexDataset()
 dec_seq,hex_seq=dataset.loadData(corp_size)
-train_inputs = $dec[[0,$corp_size-$test_size-1]];
-$train_target = $hex[[0,$corp_size-$test_size-1]];
-$test_input = $dec[[$corp_size-$test_size,$corp_size-1]];
-$test_target = $hex[[$corp_size-$test_size,$corp_size-1]];
-$input_length = $train_inputs->shape()[1];
-[$iv,$tv,$input_dic,$target_dic]=$dataset->dicts();
-$input_vocab_size = count($input_dic);
-$target_vocab_size = count($target_dic);
+train_inputs = dec_seq[[0,corp_size-test_size-1]]
+train_target = hex_seq[[0,corp_size-test_size-1]]
+test_input = dec_seq[[corp_size-test_size,corp_size-1]]
+test_target = hex_seq[[corp_size-test_size,corp_size-1]]
+input_length = train_inputs.shape[1]
+iv,tv,input_dic,target_dic=dataset.dicts()
+input_vocab_size = len(input_dic)
+target_vocab_size = len(target_dic)
 
 echo "[".$dataset->seq2str($train_inputs[0],$dataset->vocab_input)."]=>[".$dataset->seq2str($train_target[0],$dataset->vocab_target)."]\n";
 
