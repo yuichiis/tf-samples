@@ -51,28 +51,11 @@ class Encoder(keras.Model):
         }
     }
 
-    public function build(array $inputShape=null, array $options=null) : array
-    {
-        $inputShape=$this->normalizeInputShape($inputShape);
-        $inputShape = $this->registerLayer($this->embedding,$inputShape);
-        $inputShape = $this->registerLayer($this->rnn,$inputShape);
-        $this->outputShape = $inputShape;
-        $this->statesShapes = $this->rnn->statesShapes();
-        return $this->outputShape;
-    }
-
-    public function getConfig() : array
-    {
-        return [
-            'builder'=>true,
-            'rnn'=>$this->rnnName,
-            'vocab_size'=>$this->vocabSize,
-            'word_vec_size'=>$this->wordVecSize,
-            'recurrent_units'=>$this->recurrentUnits,
-            ];
-    }
-
-    protected function call(NDArray $inputs,bool $training, array $initalStates=null, array $options=null)
+    def call(
+        inputs: ndarray,
+        training: bool,
+        initalStates: tuple=null,
+        **kwarg)
     {
         $wordvect = $this->embedding->forward($inputs,$training);
         [$outputs,$states]=$this->rnn->forward($wordvect,$training,$initalStates);
