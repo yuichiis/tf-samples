@@ -48,8 +48,6 @@ class Encoder(keras.Model):
                 )
         else:
             raise Exception('unknown rnn type: '+rnn)
-        }
-    }
 
     def call(
         inputs: ndarray,
