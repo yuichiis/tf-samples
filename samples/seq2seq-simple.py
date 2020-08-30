@@ -351,6 +351,8 @@ history = seq2seq.fit(
 
 plt.plot(history.history['loss'],label='loss')
 plt.plot(history.history['accuracy'],label='accuracy')
+plt.plot(history.history['val_loss'],label='val_loss')
+plt.plot(history.history['val_accuracy'],label='accuracy')
 
 samples = ['10','255','1024'];
 for sequence in samples:
