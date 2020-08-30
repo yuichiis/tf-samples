@@ -29,10 +29,10 @@ class Encoder(keras.Model):
         recurrent_units: int
     ):
         '''enconder'''
-        $this->inputShape=[$input_length];
-        $this->vocabSize = $vocab_size;
-        $this->wordVectSize = $word_vect_size;
-        $this->recurrentSize = $recurrent_units;
+        self.inputShape=[input_length]
+        self.vocab_size = vocab_size
+        self.word_vect_size = word_vect_size
+        self.recurrent_size = recurrent_units
 
         $this->embedding = $builder->layers()->Embedding($vocab_size, $word_vect_size);
         $this->rnnName = $rnn;
