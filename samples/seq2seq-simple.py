@@ -91,13 +91,7 @@ class Encoder extends AbstractRNNLayer
 
 class Decoder(keras.Model):
     '''
-    protected $vocabSize;
-    protected $wordVectSize;
-    protected $recurrentUnits;
-    protected $denseUnits;
-    protected $embedding;
-    protected $rnn;
-    protected $dense;
+    Decoder
     '''
     def __init__(
         rnn: str,
