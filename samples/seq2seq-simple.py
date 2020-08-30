@@ -34,19 +34,19 @@ class Encoder(keras.Model):
         self.word_vect_size = word_vect_size
         self.recurrent_units = recurrent_units
 
-        $this->embedding = $builder->layers()->Embedding($vocab_size, $word_vect_size);
-        $this->rnnName = $rnn;
-        if($rnn=='simple') {
-            $this->rnn = $builder->layers()->SimpleRNN(
-                $recurrent_units,[
-                    'return_state'=>true,
-                ]);
-        } elseif($rnn=='lstm') {
-            $this->rnn = $builder->layers()->LSTM(
-                $recurrent_units,[
-                    'return_state'=>true,
-                ]);
-        } else {
+        $this->embedding = keras.layers.Embedding(vocab_size, word_vect_size)
+        self.rnnName = rnn
+        if rnn=='simple':
+            self.rnn = keras.layers.SimpleRNN(
+                recurrent_units,
+                    return_state=True,
+                )
+        elif rnn=='lstm':
+            self.rnn = keras.layers.LSTM(
+                recurrent_units,
+                return_state=True,
+                )
+        else:
             throw new InvalidArgumentException('unknown rnn type: '.$rnn);
         }
     }
