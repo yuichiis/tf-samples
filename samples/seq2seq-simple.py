@@ -147,6 +147,7 @@ class Decoder(keras.Model):
         outputs,states=self.rnn(wordvect,training,initalStates)
         outputs=self.dense(outputs,training)
         return (outputs,states)
+        
 
 class Seq2seq(keras.Model):
 
