@@ -349,8 +349,8 @@ history = seq2seq.fit(
         test_input,test_target]
     )
 
-$samples = ['10','255','1024'];
-foreach ($samples as $value) {
+samples = ['10','255','1024'];
+for value in samples:
     $target = $dataset->translate(
         $seq2seq,$value);
     echo "[$value]=>[$target]\n";
