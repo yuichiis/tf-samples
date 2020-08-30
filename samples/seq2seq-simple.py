@@ -337,9 +337,9 @@ seq2seq = Seq2seq(
     dense_units=512,
 )
 
-$seq2seq->compile([
-    'optimizer'=>$nn->optimizers()->Adam(),
-    ]);
+seq2seq.compile(
+    optimizer=keras.optimizers.Adam(),
+    )
 $history = $seq2seq->fit($train_inputs,$train_target,
     ['epochs'=>5,'batch_size'=>128,'validation_data'=>[$test_input,$test_target]]);
 
