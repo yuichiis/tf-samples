@@ -47,7 +47,7 @@ class Encoder(keras.Model):
                 return_state=True,
                 )
         else:
-            throw new InvalidArgumentException('unknown rnn type: '.$rnn);
+            raise Exception('unknown rnn type: '+rnn)
         }
     }
 
