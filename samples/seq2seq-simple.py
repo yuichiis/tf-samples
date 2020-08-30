@@ -340,8 +340,14 @@ seq2seq.compile(
     loss='sparse_categorical_crossentropy',
     optimizer='adam',
     )
-$history = $seq2seq->fit($train_inputs,$train_target,
-    ['epochs'=>5,'batch_size'=>128,'validation_data'=>[$test_input,$test_target]]);
+history = seq2seq.fit(
+    train_inputs,
+    train_target,
+    epochs=5,
+    batch_size=128,
+    validation_data=[
+        test_input,test_target]
+    )
 
 $samples = ['10','255','1024'];
 foreach ($samples as $value) {
