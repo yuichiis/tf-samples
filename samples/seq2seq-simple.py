@@ -32,7 +32,7 @@ class Encoder(keras.Model):
         self.inputShape=[input_length]
         self.vocab_size = vocab_size
         self.word_vect_size = word_vect_size
-        self.recurrent_size = recurrent_units
+        self.recurrent_units = recurrent_units
 
         $this->embedding = $builder->layers()->Embedding($vocab_size, $word_vect_size);
         $this->rnnName = $rnn;
