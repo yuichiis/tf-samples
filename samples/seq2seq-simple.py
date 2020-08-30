@@ -150,7 +150,6 @@ class Seq2seq(keras.Model):
         self.out = keras.layers.Activation('softmax')
         self.start_voc_id = start_voc_id
 
-
     def shiftSentence(
         ndarray sentence) -> ndarray:
         '''shift target sequence to learn'''
