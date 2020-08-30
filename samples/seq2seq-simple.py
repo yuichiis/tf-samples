@@ -351,7 +351,7 @@ history = seq2seq.fit(
 
 samples = ['10','255','1024'];
 for value in samples:
-    $target = $dataset->translate(
-        $seq2seq,$value);
-    echo "[$value]=>[$target]\n";
+    target = dataset.translate(
+        seq2seq,value)
+    print('[%s]=>[%s]' % (sequence,target))
 }
