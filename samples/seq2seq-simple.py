@@ -2,28 +2,36 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import os
 import pickle
+#from packaging import version
+from distutils.version import LooseVersion, StrictVersion
 #os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
 
-import keras
+import tensorflow as tf
+from tensorflow import keras
 import numpy as np
-import numpy.ndarray
+from numpy import ndarray
 import matplotlib.pyplot as plt
 
-print(keras.__version__)
+print('keras: %s, tensorflow: %s' % (keras.__version__, tf.__version__))
+if StrictVersion(tf.__version__) < StrictVersion("2.2.0"):
+    raise Exception('tensorflow v2.2.0 or later is required.')
 
 class Encoder(keras.Model):
     '''
     encoder
     '''
     def __init__(
+        self,
         rnn: str,
         input_length: int,
         vocab_size: int,
         word_vect_size: int,
-        recurrent_units: int
+        recurrent_units: int,
+        **kwargs
     ):
-        '''enconder'''
-        self.input_shape=[input_length]
+        '''encoder'''
+        super(Encoder, self).__init__(**kwargs)
+        #self.input_shape=[input_length]
         self.vocab_size = vocab_size
         self.word_vect_size = word_vect_size
         self.recurrent_units = recurrent_units
@@ -33,10 +41,15 @@ class Encoder(keras.Model):
         if rnn=='simple':
             self.rnn = keras.layers.SimpleRNN(
                 recurrent_units,
-                    return_state=True,
+                return_state=True,
                 )
         elif rnn=='lstm':
             self.rnn = keras.layers.LSTM(
+                recurrent_units,
+                return_state=True,
+                )
+        elif rnn=='gru':
+            self.rnn = keras.layers.GRU(
                 recurrent_units,
                 return_state=True,
                 )
@@ -44,14 +57,16 @@ class Encoder(keras.Model):
             raise Exception('unknown rnn type: '+rnn)
 
     def call(
+        self,
         inputs: ndarray,
         training: bool,
-        initalStates: tuple=None,
-        **kwarg) -> tuple:
-        '''foward'''
-        wordvect = self.embedding(inputs,training)
-        outputs,states=srlf.rnn(wordvect,training,initalStates)
-        return (outputs,states)
+        initial_state: tuple=None,
+        **kwargs) -> tuple:
+        '''forward'''
+        wordvect = self.embedding(inputs)
+        states = self.rnn(wordvect,training=training,initial_state=initial_state)
+        outputs = states.pop(0)
+        return (outputs, states)
 
 
 class Decoder(keras.Model):
@@ -59,17 +74,20 @@ class Decoder(keras.Model):
     Decoder
     '''
     def __init__(
+        self,
         rnn: str,
         input_length: int,
         vocab_size: int,
         word_vect_size: int,
         recurrent_units: int,
-        dense_units: int
-    )
+        dense_units: int,
+        **kwargs
+        ):
         '''
         Decoder
         '''
-        self.input_shape=[input_length]
+        super(Decoder, self).__init__(**kwargs)
+        #self.input_shape=[input_length]
         self.vocab_size = vocab_size
         self.word_vect_size = word_vect_size
         self.recurrent_size = recurrent_units
@@ -81,34 +99,43 @@ class Decoder(keras.Model):
             self.rnn = keras.layers.SimpleRNN(
                 recurrent_units,
                 return_state=True,
-                return_sequence=True,
+                return_sequences=True,
             )
         elif rnn=='lstm':
-            self.rnn = ketas.layers.LSTM(
+            self.rnn = keras.layers.LSTM(
                 recurrent_units,
                 return_state=True,
-                return_sequence=True,
+                return_sequences=True,
+            )
+        elif rnn=='gru':
+            self.rnn = keras.layers.GRU(
+                recurrent_units,
+                return_state=True,
+                return_sequences=True,
             )
         else:
             raise Exception('unknown rnn type: '+rnn)
-        
-        self.dense = self.layers.Dense(dense_units)
-        
+
+        self.dense = keras.layers.Dense(dense_units)
+
     def call(
+        self,
         inputs: ndarray,
         training: bool,
-        initalStates: tuple=None,
+        initial_state: tuple=None,
         **kwargs) -> tuple:
-        '''foward'''
-        wordvect = self.embedding(inputs,training)
-        outputs,states=self.rnn(wordvect,training,initalStates)
-        outputs=self.dense(outputs,training)
+        '''forward'''
+        wordvect = self.embedding(inputs)
+        states = self.rnn(wordvect,training=training,initial_state=initial_state)
+        outputs = states.pop(0)
+        outputs = self.dense(outputs)
         return (outputs,states)
-        
+
 
 class Seq2seq(keras.Model):
 
     def __init__(
+        self,
         rnn=None,
         input_length=None,
         input_vocab_size=None,
@@ -147,42 +174,57 @@ class Seq2seq(keras.Model):
             dense_units,
             **kwargs
         )
-        self.out = keras.layers.Activation('softmax')
+        #self.out = keras.layers.Activation('softmax')
         self.start_voc_id = start_voc_id
 
     def shiftSentence(
-        ndarray sentence) -> ndarray:
+        self,
+        sentence: ndarray,
+        ) -> ndarray:
         '''shift target sequence to learn'''
-        result = np.zerosLike(sentence)
-        result[:,1:] = sequence[:,:-2]
-        result[:,0] = self.start_voc_id
+        shape = tf.shape(sentence)
+        batchs = shape[0]
+        start_id = tf.expand_dims(tf.repeat([self.start_voc_id],repeats=[batchs]), 1)
+        seq = sentence[:,:-1]
+        result = tf.concat([start_id,seq],1)
         return result
-    }
 
     def call(
-        inputs: ndarray,
-        trues: ndarray=None,
-        training: bool=None
-        ) -> ndarray:
+        self,
+        inputs,
+        training=None,
+        mask=None
+        ):
         '''forward step'''
-        [dummy,states] = self.encoder(inputs,training,null)
-        dec_inputs = self.shiftSentence(trues);
-        [outputs,dummy] = self.decoder(dec_inputs,training,states)
-        outputs = self.out(outputs,training)
+        train_data = inputs
+        inputs,trues = train_data
+        #print('--------forward step---------')
+        #print(inputs)
+        if isinstance(inputs, tuple) or isinstance(inputs, list):
+            print(train_data)
+            raise Exception('error')
+        dummy,states = self.encoder(inputs,training)
+        dec_inputs = self.shiftSentence(trues)
+        outputs,dummy = self.decoder(dec_inputs,training,initial_state=states)
+        #
+        #outputs = self.out(outputs)
         return outputs
-    
-    def train_step(self,
+
+    def train_step(
+        self,
         train_data: tuple
     ) -> dict:
         '''train step callback'''
         inputs,trues = train_data
-        
+
         with tf.GradientTape() as tape:
-            outputs = self(inputs,trues,True)
+            #print('====================-')
+            #print(trues)
+            outputs = self.call(train_data,training=True)
             loss = self.compiled_loss(
                 trues,outputs,
                 regularization_losses=self.losses)
-                
+
         variables = self.trainable_variables
 
         gradients = tape.gradient(loss, variables)
@@ -192,8 +234,23 @@ class Seq2seq(keras.Model):
         self.compiled_metrics.update_state(trues, outputs)
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
-        
-    def translate(self,
+
+    def test_step(self, data):
+        """
+        The logic for one evaluation step.
+        """
+        x, y = data
+
+        y_pred = self(data, training=False)
+        # Updates stateful loss metrics.
+        self.compiled_loss(
+            y, y_pred, regularization_losses=self.losses)
+
+        self.compiled_metrics.update_state(y, y_pred)
+        return {m.name: m.result() for m in self.metrics}
+
+    def translate(
+        self,
         sentence: ndarray) -> ndarray:
         '''translate sequence'''
         input_length = sentence.size
@@ -202,11 +259,11 @@ class Seq2seq(keras.Model):
         voc_id = self.start_voc_id
         target_sentence =[]
         for i in range(input_length):
-            inp = np.array([[$vocId]])
-            predictions,states = self.decoder(inp,training=False,states)
+            inp = np.array([[voc_id]])
+            predictions, states = self.decoder(inp,training=False,initial_state=states)
             voc_id = np.argmax(predictions)
             target_sentence.append(voc_id)
-        
+
         return np.array(target_sentence)
 
 
@@ -215,8 +272,8 @@ class DecHexDataset:
     def __init__(self):
         self.vocab_input = ['@','0','1','2','3','4','5','6','7','8','9',' ']
         self.vocab_target = ['@','0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F',' ']
-        self.dict_input = dict((v,k) for k,v in self.vocab_input.items())
-        self.dict_target = dict((v,k) for k,v in self.vocab_target.items())
+        self.dict_input = dict(zip(self.vocab_input,range(len(self.vocab_input))))
+        self.dict_target = dict(zip(self.vocab_target,range(len(self.vocab_target))))
 
     def dicts(self) -> tuple:
         return (
@@ -226,30 +283,32 @@ class DecHexDataset:
             self.dict_target,
         )
 
-    def generate(self,
+    def generate(
+        self,
         corp_size: int,
         length: int) -> tuple:
         '''generate random sequence'''
-        sequence = np.zeros([corp_size,length])
-        target = np.zeros([corp_size,length])
+        sequence = np.zeros([corp_size,length],dtype=np.int32)
+        target = np.zeros([corp_size,length],dtype=np.int32)
         numbers = np.random.choice(corp_size,corp_size)
         for i in range(corp_size):
-            num = numbers[i];
-            dec = str(num);
-            hex = hex(num);
+            num = numbers[i]
+            dec = str(num)
+            hex = '%x' % num
             self.str2seq(
                 dec,
                 self.dict_input,
-                sequence[i]);
+                sequence[i])
             self.str2seq(
                 hex,
                 self.dict_target,
                 target[i])
-        
+
         return (sequence,target)
-    
-    
+
+
     def str2seq(
+        self,
         input_string: str,
         word_dic: dict,
         output_seq: ndarray) -> None:
@@ -265,22 +324,23 @@ class DecHexDataset:
                 output_seq[i]=sp
 
     def seq2str(
+        self,
         input_seq: ndarray,
         word_dic: dict
         ) -> str:
         '''translate string to sequence'''
-        outout_str = ''
-        bufsz=input_seq.size
+        output_str = ''
+        bufsz = input_seq.size
         for i in range(bufsz):
-            output_str += word_dic[input_buf[i]]
-            
+            output_str = output_str + word_dic[input_seq[i]]
         return output_str
 
     def translate(
+        self,
         model: Seq2seq,
         input_str: str) -> str:
         '''translate sentence'''
-        inputs = np.zeros([1,self.length])
+        inputs = np.zeros([1,self.length],dtype=np.int32)
         self.str2seq(
             input_str,
             self.dict_input,
@@ -292,38 +352,44 @@ class DecHexDataset:
             )
 
     def loadData(
+        self,
         corp_size: int,
         path: str=None) -> ndarray:
         '''load dataset'''
         self.length = len(str(corp_size))
         if path is None:
             path='dec2hex-dataset.pkl'
-            
+
         if os.path.exists(path):
             with open(path,'rb') as fp:
                 dataset = pickle.load(fp)
         else:
             dataset = self.generate(corp_size,self.length)
             with open(path,'wb') as fp:
-                pickle.dump(dataset)
+                pickle.dump(dataset,fp)
         return dataset
 
 
-rnn = 'lstm';
-corp_size = 10000;
-test_size = 100;
+#rnn = 'simple'
+#rnn = 'lstm'
+rnn = 'gru'
+corp_size = 10000
+test_size = 100
 dataset = DecHexDataset()
 dec_seq,hex_seq=dataset.loadData(corp_size)
-train_inputs = dec_seq[[0,corp_size-test_size-1]]
-train_target = hex_seq[[0,corp_size-test_size-1]]
-test_input = dec_seq[[corp_size-test_size,corp_size-1]]
-test_target = hex_seq[[corp_size-test_size,corp_size-1]]
+train_inputs = dec_seq[0:corp_size-test_size]
+train_target = hex_seq[0:corp_size-test_size]
+test_inputs = dec_seq[corp_size-test_size:corp_size]
+test_target = hex_seq[corp_size-test_size:corp_size]
 input_length = train_inputs.shape[1]
 iv,tv,input_dic,target_dic=dataset.dicts()
 input_vocab_size = len(input_dic)
 target_vocab_size = len(target_dic)
-
-print('['+dataset.seq2str(train_inputs[0],dataset.vocab_input)+']=>['+dataset.seq2str(train_target[0],dataset.vocab_target)+']\n')
+batch_size=128
+print('rnn type=%s' % rnn)
+print('train,test: %d,%d' % (train_inputs.shape[0],test_inputs.shape[0]))
+print('['+dataset.seq2str(train_inputs[0],dataset.vocab_input)+']=>['
+    +dataset.seq2str(train_target[0],dataset.vocab_target)+']\n')
 
 seq2seq = Seq2seq(
     rnn=rnn,
@@ -337,19 +403,21 @@ seq2seq = Seq2seq(
 )
 
 seq2seq.compile(
-    loss='sparse_categorical_crossentropy',
+    #loss='sparse_categorical_crossentropy',
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer='adam',
+    metrics=['accuracy'],
     )
 history = seq2seq.fit(
     train_inputs,
     train_target,
     epochs=5,
-    batch_size=128,
-    validation_data=[
-        test_input,test_target]
+    batch_size=batch_size,
+    validation_data=(
+        test_inputs,test_target)
     )
 
-samples = ['10','255','1024'];
+samples = ['10','255','1024']
 for sequence in samples:
     target = dataset.translate(
         seq2seq,sequence)
@@ -359,4 +427,5 @@ plt.plot(history.history['loss'],label='loss')
 plt.plot(history.history['accuracy'],label='accuracy')
 plt.plot(history.history['val_loss'],label='val_loss')
 plt.plot(history.history['val_accuracy'],label='val_accuracy')
+plt.legend()
 plt.show()
