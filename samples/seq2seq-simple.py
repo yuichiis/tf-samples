@@ -12,7 +12,7 @@ import numpy as np
 from numpy import ndarray
 import matplotlib.pyplot as plt
 
-print('keras: %s, tensorflow: %s' % (keras.__version__, tf.__version__))
+print('tensorflow: %s, keras: %s' % (tf.__version__, keras.__version__))
 if StrictVersion(tf.__version__) < StrictVersion("2.2.0"):
     raise Exception('tensorflow v2.2.0 or later is required.')
 
@@ -373,8 +373,8 @@ class DecHexDataset:
 #rnn = 'simple'
 #rnn = 'lstm'
 rnn = 'gru'
-corp_size = 10000
-test_size = 100
+corp_size = 100
+test_size = 10
 dataset = DecHexDataset()
 dec_seq,hex_seq=dataset.loadData(corp_size)
 train_inputs = dec_seq[0:corp_size-test_size]
