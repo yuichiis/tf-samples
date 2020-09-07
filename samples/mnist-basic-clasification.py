@@ -46,6 +46,8 @@ else:
 
 print("train=["+','.join([str(i) for i in train_img.shape])+"]")
 print("test=["+','.join([str(i) for i in test_img.shape])+"]")
+print("train_label=["+','.join([str(i) for i in train_label.shape])+"]")
+print("test_label=["+','.join([str(i) for i in train_label.shape])+"]")
 
 if shrink:
     # Shrink data
