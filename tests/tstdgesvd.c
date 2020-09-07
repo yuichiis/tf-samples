@@ -138,3 +138,25 @@ void print_matrix( char* desc, int m, int n, double* a, int lda ) {
                 printf( "\n" );
         }
 }
+/*
+ DGESVD Example Program Results
+
+ Singular values
+  27.47  22.64   8.56   5.99   2.01
+
+ Left singular vectors (stored columnwise)
+  -0.59   0.26   0.36   0.31   0.23
+  -0.40   0.24  -0.22  -0.75  -0.36
+  -0.03  -0.60  -0.45   0.23  -0.31
+  -0.43   0.24  -0.69   0.33   0.16
+  -0.47  -0.35   0.39   0.16  -0.52
+   0.29   0.58  -0.02   0.38  -0.65
+
+ Right singular vectors (stored rowwise)
+  -0.25  -0.40  -0.69  -0.37  -0.41
+   0.81   0.36  -0.25  -0.37  -0.10
+  -0.26   0.70  -0.22   0.39  -0.49
+   0.40  -0.45   0.25   0.43  -0.62
+  -0.22   0.14   0.59  -0.63  -0.44
+
+*/
