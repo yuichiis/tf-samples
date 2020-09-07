@@ -8,4 +8,10 @@ a = np.array([
 [3.16,  7.98,  3.01,  5.80,  4.27, -5.31,],
 ]);
 
-##
+a=a.T
+
+s,u,vt = np.linalg.svd(a)
+
+print(s)
+print(u)
+print(vt)
