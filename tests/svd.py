@@ -12,6 +12,7 @@ a=a.T
 
 s,u,vt = np.linalg.svd(a)
 
+np.set_printoptions(precision=2)
 print(s)
 print(u)
 print(vt)
