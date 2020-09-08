@@ -349,5 +349,6 @@ class Svd extends LinearAlgebra
     }
 }
 
-$mo = new ();
-
+$mo = new MatrixOperator();
+$blas = new Rindow\OpenBlas\Blas();
+$math = new Rindow\OpenBlas\Math();
