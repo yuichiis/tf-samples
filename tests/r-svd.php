@@ -41,6 +41,7 @@ class TLA extends LinearAlgebra
                         $U[$k][$i] = $U[$k][$i] / $scale;
                         $s += $U[$k][$i] * $U[$k][$i];
                     }
+                    // u(i,i)=()
                     $f = $U[$i][$i];
                     $g = - $this->sameSign(sqrt($s), $f);
                     $h = $f * $g - $s;
