@@ -3,6 +3,9 @@ $loader = require __DIR__.'/../../rindow-neuralnetworks/vendor/autoload.php';
 
 use Rindow\Math\Matrix\LinearAlgebra;
 use Rindow\Math\Matrix\MatrixOperator;
+use Interop\Polite\Math\Matrix\BLAS;
+use Interop\Polite\Math\Matrix\NDArray;
+use ArrayAccess as Buffer;
 
 class Svd extends LinearAlgebra
 {
