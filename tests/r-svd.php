@@ -7,7 +7,7 @@ use Interop\Polite\Math\Matrix\BLAS;
 use Interop\Polite\Math\Matrix\NDArray;
 use ArrayAccess as Buffer;
 
-class Svd extends LinearAlgebra
+class TLA extends LinearAlgebra
 {
 
     public function svd(NDArray $matrix)
@@ -330,4 +330,4 @@ class Svd extends LinearAlgebra
 $mo = new MatrixOperator();
 $blas = new Rindow\OpenBlas\Blas();
 $math = new Rindow\OpenBlas\Math();
-$la = new Svd($blas,$math);
+$la = new TLA($blas,$math);
