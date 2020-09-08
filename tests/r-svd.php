@@ -31,9 +31,12 @@ class TLA extends LinearAlgebra
             $rv1[$i] = $scale * $g;
             $g = $s = $scale = 0.0;
             if($i < $m){
+                // scale = asum(u(m,i))
                 for($k = $i; $k < $m; $k++)
                     $scale += abs($U[$k][$i]);
                 if($scale != 0.0) {
+                    // u(m,i) = scale * u(m,i)
+                    // s = asum(u(m,i)**2)
                     for($k = $i; $k < $m; $k++) {
                         $U[$k][$i] = $U[$k][$i] / $scale;
                         $s += $U[$k][$i] * $U[$k][$i];
