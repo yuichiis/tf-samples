@@ -9,31 +9,6 @@ use ArrayAccess as Buffer;
 
 class Svd extends LinearAlgebra
 {
-     private function sameSign($a, $b)
-     {
-         if($b >= 0){
-             $result = abs($a);
-         } else {
-             $result = - abs($a);
-         }
-         return $result;
-     }
-
-     private function pythag($a, $b)
-     {
-         $absa = abs($a);
-         $absb = abs($b);
-
-         if( $absa > $absb ){
-             return $absa * sqrt( 1.0 + pow( $absb / $absa , 2) );
-         } else {
-             if( $absb > 0.0 ){
-                 return $absb * sqrt( 1.0 + pow( $absa / $absb, 2 ) );
-             } else {
-                 return 0.0;
-             }
-         }
-     }
 
     public function svd(NDArray $matrix)
     {
