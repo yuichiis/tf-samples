@@ -1,6 +1,7 @@
 <?php
 $loader = require __DIR__.'/../../rindow-neuralnetworks/vendor/autoload.php';
 
+use Rindow\Math\Matrix\LinearAlgebra;
 
 class Svd extends LinearAlgebra
 {
