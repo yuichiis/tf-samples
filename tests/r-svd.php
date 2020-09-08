@@ -2,6 +2,7 @@
 $loader = require __DIR__.'/../../rindow-neuralnetworks/vendor/autoload.php';
 
 use Rindow\Math\Matrix\LinearAlgebra;
+use Rindow\Math\Matrix\MatrixOperator;
 
 class Svd extends LinearAlgebra
 {
@@ -348,5 +349,5 @@ class Svd extends LinearAlgebra
     }
 }
 
-$mo = new Rindow\Math\Matrix\MatrixOperator();
+$mo = new ();
 
