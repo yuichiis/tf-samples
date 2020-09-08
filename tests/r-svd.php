@@ -315,7 +315,7 @@ class Svd extends LinearAlgebra
         //$matrices['Rank'] = $rank;
         //$matrices['K'] = $k;
 
-        return [$U,$S,$this->transpose($V)];
+        return [$U,$S,$this->t_transpose($V)];
     }
 
     /**
