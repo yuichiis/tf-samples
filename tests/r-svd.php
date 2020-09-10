@@ -333,5 +333,6 @@ class TLA extends LinearAlgebra
 
 $mo = new MatrixOperator();
 $blas = new Rindow\OpenBlas\Blas();
+$lapack = new Rindow\OpenBlas\Lapack();
 $math = new Rindow\OpenBlas\Math();
-$la = new TLA($blas,$math);
+$la = new LinearAlgebra($blas,$lapack,$math);

@@ -72,72 +72,93 @@
 */
 #include <stdlib.h>
 #include <stdio.h>
+#if _MSC_VER
+#include <complex.h>
+#define lapack_complex_float _Fcomplex
+#define lapack_complex_double _Dcomplex
+#endif
+#include <lapacke.h>
 
 /* DGESVD prototype */
-extern void dgesvd_( char* jobu, char* jobvt, int* m, int* n, double* a,
-                int* lda, double* s, double* u, int* ldu, double* vt, int* ldvt,
-                double* work, int* lwork, int* info );
+//extern void dgesvd_( char* jobu, char* jobvt, int* m, int* n, double* a,
+//                int* lda, double* s, double* u, int* ldu, double* vt, int* ldvt,
+//                double* work, int* lwork, int* info );
 /* Auxiliary routines prototypes */
-extern void print_matrix( char* desc, int m, int n, double* a, int lda );
+extern void print_matrix( int matrix_layout, char* desc, int m, int n, double* a, int lda );
 
 /* Parameters */
 #define M 6
 #define N 5
-#define LDA M
+#define LDA N
 #define LDU M
 #define LDVT N
 #define min_num(a,b) ((a)>(b)?(b):(a))
-
 /* Main program */
 int main() {
         /* Locals */
         int m = M, n = N, lda = LDA, ldu = LDU, ldvt = LDVT, info, lwork;
-
+        //int matrix_layout = LAPACK_ROW_MAJOR;
+        int matrix_layout = LAPACK_COL_MAJOR;
         double wkopt;
         double* work;
         /* Local arrays */
-
-        double s[min_num(M,N)], u[LDU*M], vt[LDVT*N];
-        double a[LDA*N] = {
-            8.79,  6.11, -9.15,  9.57, -3.49,  9.84,
-            9.93,  6.91, -7.93,  1.64,  4.02,  0.15,
-            9.83,  5.04,  4.86,  8.83,  9.80, -8.99,
-            5.45, -0.27,  4.85,  0.74, 10.00, -6.02,
-            3.16,  7.98,  3.01,  5.80,  4.27, -5.31
+        double superb[min_num(M,N)];
+        double s[min_num(M,N)], u[M*LDU], vt[LDVT*N];
+        double a[M*LDA] = {
+             8.79,  9.93,  9.83,  5.45,  3.16,
+             6.11,  6.91,  5.04, -0.27,  7.98,
+            -9.15, -7.93,  4.86,  4.85,  3.01,
+             9.57,  1.64,  8.83,  0.74,  5.80
+            -3.49,  4.02,  9.80, 10.00,  4.27,
+             9.84,  0.15, -8.99, -6.02, -5.31
         };
+
         /* Executable statements */
         printf( " DGESVD Example Program Results\n" );
-        /* Query and allocate the optimal workspace */
-        lwork = -1;
-        dgesvd_( "All", "All", &m, &n, a, &lda, s, u, &ldu, vt, &ldvt, &wkopt, &lwork,
-         &info );
-        lwork = (int)wkopt;
-        work = (double*)malloc( lwork*sizeof(double) );
         /* Compute SVD */
-        dgesvd_( "All", "All", &m, &n, a, &lda, s, u, &ldu, vt, &ldvt, work, &lwork,
-         &info );
-        /* Check for convergence */
-        if( info > 0 ) {
-                printf( "The algorithm computing SVD failed to converge.\n" );
-                exit( 1 );
-        }
+        info = LAPACKE_dgesvd( matrix_layout, 'A', 'A',
+            m, n, a, lda, s, u, ldu, vt, ldvt, superb );
         /* Print singular values */
-        print_matrix( "Singular values", 1, n, s, 1 );
+        print_matrix( matrix_layout, "Singular values(s)", 1, min_num(M,N), s, 1 );
         /* Print left singular vectors */
-        print_matrix( "Left singular vectors (stored columnwise)", m, m, u, ldu );
+        print_matrix( matrix_layout, "Left singular vectors(u) (stored columnwise)", m, ldu, u, ldu );
         /* Print right singular vectors */
-        print_matrix( "Right singular vectors (stored rowwise)", n, n, vt, ldvt );
+        print_matrix( matrix_layout, "Right singular vectors(vt) (stored rowwise)", n, n, vt, ldvt );
         /* Free workspace */
-        free( (void*)work );
         exit( 0 );
 } /* End of DGESVD Example */
 
 /* Auxiliary routine: printing a matrix */
-void print_matrix( char* desc, int m, int n, double* a, int lda ) {
+void print_matrix( int matrix_layout, char* desc, int m, int n, double* a, int lda ) {
         int i, j;
+        int ldm, ldn;
+        if(matrix_layout==LAPACK_ROW_MAJOR) { ldm = lda; ldn = 1; }
+        else                                { ldm = 1; ldn = lda; }
         printf( "\n %s\n", desc );
         for( i = 0; i < m; i++ ) {
-                for( j = 0; j < n; j++ ) printf( " %6.2f", a[i+j*lda] );
+                for( j = 0; j < n; j++ ) printf( " %6.2f", a[i*ldm+j*ldn] );
                 printf( "\n" );
         }
 }
+/*
+ DGESVD Example Program Results
+
+ Singular values
+  27.47  22.64   8.56   5.99   2.01
+
+ Left singular vectors (stored columnwise)
+  -0.59   0.26   0.36   0.31   0.23
+  -0.40   0.24  -0.22  -0.75  -0.36
+  -0.03  -0.60  -0.45   0.23  -0.31
+  -0.43   0.24  -0.69   0.33   0.16
+  -0.47  -0.35   0.39   0.16  -0.52
+   0.29   0.58  -0.02   0.38  -0.65
+
+ Right singular vectors (stored rowwise)
+  -0.25  -0.40  -0.69  -0.37  -0.41
+   0.81   0.36  -0.25  -0.37  -0.10
+  -0.26   0.70  -0.22   0.39  -0.49
+   0.40  -0.45   0.25   0.43  -0.62
+  -0.22   0.14   0.59  -0.63  -0.44
+
+*/
