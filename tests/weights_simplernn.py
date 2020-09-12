@@ -16,6 +16,7 @@ model = keras.models.Sequential([
     keras.layers.SimpleRNN(
         16,# units
         input_shape=(4,10),
+        #input_shape=(1,10),
     ),
     keras.layers.Activation('softmax')
 ])
@@ -26,6 +27,29 @@ model.compile(
     metrics=['accuracy'],
 )
 model.summary()
+for w in model.get_weights():
+    print(np.amax(w))
+
+#x = np.array([
+#    [0],
+#    [9],
+#    [1],
+#    [5],
+#],np.int32)
+#t = np.array(
+#    [0,9,1,5]
+#)
+#v_x = np.array([
+#    [2],
+#    [1],
+#    [4],
+#    [9],
+#],np.int32)
+#v_t = np.array(
+#    [0,9,1,5]
+#)
+#x = keras.utils.to_categorical(x.reshape(4,), num_classes=10).reshape(4,1,10)
+#v_x = keras.utils.to_categorical(v_x.reshape(4,), num_classes=10).reshape(4,1,10)
 
 x = np.array([
     [0,1,2,9],

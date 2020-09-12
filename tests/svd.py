@@ -8,9 +8,10 @@ a = np.array([
 [-3.49,  4.02,  9.80, 10.00,  4.27,],
 [ 9.84,  0.15, -8.99, -6.02, -5.31,],
 ]);
-
-u,s,vt = np.linalg.svd(a,full_matrices=True)
-
+a = a.T
+u,s,vt = np.linalg.svd(a,full_matrices=False)
+print('a')
+print(a.shape)
 np.set_printoptions(precision=2)
 print('----u----')
 print(u)

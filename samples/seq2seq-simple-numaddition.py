@@ -168,11 +168,15 @@ print("Build model...")
 model = keras.Sequential([
     layers.Embedding(len(input_dic), 16),
     # Encoder
-    layers.GRU(128,go_backwards=REVERSE),
+    #layers.GRU(128,go_backwards=REVERSE),
+    layers.LSTM(128,go_backwards=REVERSE),
+    #layers.SimpleRNN(128,go_backwards=REVERSE),
     # Expand to answer length and peeking hidden states
     layers.RepeatVector(output_length),
     # Decoder
-    layers.GRU(128, return_sequences=True),
+    #layers.GRU(128, return_sequences=True),
+    layers.LSTM(128, return_sequences=True),
+    #layers.SimpleRNN(128,go_backwards=REVERSE),
     # Output
     layers.Dense(
         len(target_dic),
