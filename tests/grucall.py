@@ -7,8 +7,6 @@
         x_z = matrix_x[:, :self.units]
         x_r = matrix_x[:, self.units: 2 * self.units]
         x_h = matrix_x[:, 2 * self.units:]
-
-
                 # hidden state projected by all gate matrices at once
         matrix_inner = K.dot(h_tm1, self.recurrent_kernel)
         if self.use_bias:
