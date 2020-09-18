@@ -13,10 +13,9 @@ import matplotlib.pyplot as plt
 print('tensorflow: %s, keras: %s' % (tf.__version__, keras.__version__))
 
 model = keras.models.Sequential([
-    keras.layers.SimpleRNN(
+    keras.layers.LSTM(
         16,# units
         input_shape=(4,10),
-        #input_shape=(1,10),
     ),
     keras.layers.Activation('softmax')
 ])
@@ -27,29 +26,6 @@ model.compile(
     metrics=['accuracy'],
 )
 model.summary()
-for w in model.get_weights():
-    print(np.amax(w))
-
-#x = np.array([
-#    [0],
-#    [9],
-#    [1],
-#    [5],
-#],np.int32)
-#t = np.array(
-#    [0,9,1,5]
-#)
-#v_x = np.array([
-#    [2],
-#    [1],
-#    [4],
-#    [9],
-#],np.int32)
-#v_t = np.array(
-#    [0,9,1,5]
-#)
-#x = keras.utils.to_categorical(x.reshape(4,), num_classes=10).reshape(4,1,10)
-#v_x = keras.utils.to_categorical(v_x.reshape(4,), num_classes=10).reshape(4,1,10)
 
 x = np.array([
     [0,1,2,9],
@@ -67,7 +43,7 @@ v_x = np.array([
     [9,3,3,2],
 ],np.int32)
 v_t = np.array(
-    [1,0,1,0]
+    [1,1,0,0]
 )
 x = keras.utils.to_categorical(x.reshape(16,), num_classes=10).reshape(4,4,10)
 v_x = keras.utils.to_categorical(v_x.reshape(16,), num_classes=10).reshape(4,4,10)
@@ -85,5 +61,5 @@ plt.plot(np.array(history.history['val_accuracy']),label='val_accuracy')
 plt.plot(np.array(history.history['loss']),label='loss')
 plt.plot(np.array(history.history['val_loss']),label='val_loss')
 plt.legend()
-plt.title('SimpleRNN')
+plt.title('LSTM')
 plt.show()

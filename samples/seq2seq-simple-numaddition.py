@@ -136,6 +136,30 @@ class NumAdditionDataset:
         return dataset
 
 
+class CustomCallback(keras.callbacks.Callback):
+    def __init__(self,**kwargs):
+        super(CustomCallback, self).__init__()
+        self.gradlog = {}
+        self.prev_w = None
+    def on_epoch_end(self, epoch, logs=None):
+        weights = self.model.get_weights();
+        if self.prev_w is None:
+            self.prev_w = weights
+            return
+        num = 0;
+        next = []
+        for w,prev in zip(weights,self.prev_w):
+            name = 'g'+str(num)+'('+str(w.shape)+')'
+            if self.gradlog.get(name) is None:
+                self.gradlog[name] = [];
+            g = prev - w
+            self.gradlog[name].append(np.max(np.abs(w)))
+            #echo sprintf("%7.2f",strval())." ";
+            num += 1
+            next.append(w.copy())
+        self.prev_w = next
+
+
 # All the numbers, plus sign and space for padding.
 input_length  = DIGITS*2 + 1
 output_length = DIGITS + 1
@@ -161,22 +185,40 @@ print("Validation Data:")
 print(x_val.shape)
 print(y_val.shape)
 
+x_train = keras.utils.to_categorical(
+    x_train.reshape(x_train.size,),
+    num_classes=len(input_voc)
+    ).reshape(x_train.shape[0],x_train.shape[1],len(input_voc))
+x_val = keras.utils.to_categorical(
+    x_val.reshape(x_val.size,),
+    num_classes=len(target_voc)
+    ).reshape(x_val.shape[0],x_val.shape[1],len(target_voc))
+#v_x = keras.utils.to_categorical(v_x.reshape(16,), num_classes=10).reshape(4,4,10)
+
 # Build the model
 
 print("Build model...")
 
 model = keras.Sequential([
-    layers.Embedding(len(input_dic), 16),
+    #layers.Embedding(len(input_dic), 16),
+    keras.Input(shape=(input_length,len(input_dic))),
     # Encoder
     #layers.GRU(128,go_backwards=REVERSE),
-    layers.LSTM(128,go_backwards=REVERSE),
+    #layers.LSTM(128,go_backwards=REVERSE),
     #layers.SimpleRNN(128,go_backwards=REVERSE),
+    #layers.Conv1D(128,kernel_size=3,activation='relu'),
+    #layers.MaxPooling1D(),
+    #layers.Conv1D(128,kernel_size=3,activation='relu'),
+    #layers.MaxPooling1D(),
+    layers.Flatten(),
+    #layers.Dense(1024,activation='relu'),
     # Expand to answer length and peeking hidden states
     layers.RepeatVector(output_length),
     # Decoder
     #layers.GRU(128, return_sequences=True),
-    layers.LSTM(128, return_sequences=True),
-    #layers.SimpleRNN(128,go_backwards=REVERSE),
+    #layers.LSTM(128, return_sequences=True),
+    #layers.SimpleRNN(128, return_sequences=True),
+    #layers.Dense(128,activation='relu'),
     # Output
     layers.Dense(
         len(target_dic),
@@ -196,18 +238,26 @@ model.summary()
 epochs = 30
 batch_size = 32
 
+callback = CustomCallback()
 history = model.fit(
     x_train,
     y_train,
     batch_size=batch_size,
     epochs=epochs,
     validation_data=(x_val, y_val),
+    #callbacks=[callback],
 )
 
 for i in range(10):
     idx = np.random.randint(0,len(questions))
     question = questions[idx]
     input = question.reshape(1,input_length)
+
+    input = keras.utils.to_categorical(
+        input.reshape(input.size,),
+        num_classes=len(input_voc)
+        ).reshape(input.shape[0],input.shape[1],len(input_voc))
+
     predict = model.predict(input)
     predict_seq = np.argmax(predict[0].reshape(output_length,len(target_dic)),axis=1)
     predict_str = dataset.seq2str(predict_seq,target_voc)
@@ -218,10 +268,34 @@ for i in range(10):
     correct = '*' if predict_str==answer_str else ' '
     print('%s=%s : %s %s' % (question_str,predict_str,correct,answer_str))
 
+plt.figure()
 plt.plot(np.array(history.history['accuracy']),label='accuracy')
 plt.plot(np.array(history.history['val_accuracy']),label='val_accuracy')
 plt.plot(np.array(history.history['loss']),label='loss')
 plt.plot(np.array(history.history['val_loss']),label='val_loss')
 plt.legend();
 plt.title('seq2seq-numaddition')
+#wnum = 0
+#idx = 0
+#fig,axes = plt.subplots(4,5)
+#for w in model.get_weights():
+#    print(w.shape,np.amax(w))
+#    if wnum in [1,2,4,5]:
+#        ww = w[:,0:128]
+#        axes[idx//5,idx%5].imshow(ww)
+#        idx += 1
+#        ww = w[:,128:128*2]
+#        axes[idx//5,idx%5].imshow(ww)
+#        idx += 1
+#        ww = w[:,128*2:128*3]
+#        axes[idx//5,idx%5].imshow(ww)
+#        idx += 1
+#    elif wnum in [0,3,6,7]:
+#        axes[idx//5,idx%5].imshow(w)
+#        idx += 1
+#    wnum += 1
+#plt.figure()
+#for key,gradlog in callback.gradlog.items():
+#    plt.plot(np.array(gradlog),label=key)
+#plt.legend()
 plt.show()
