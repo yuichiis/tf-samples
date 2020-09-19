@@ -185,14 +185,14 @@ print("Validation Data:")
 print(x_val.shape)
 print(y_val.shape)
 
-x_train = keras.utils.to_categorical(
-    x_train.reshape(x_train.size,),
-    num_classes=len(input_voc)
-    ).reshape(x_train.shape[0],x_train.shape[1],len(input_voc))
-x_val = keras.utils.to_categorical(
-    x_val.reshape(x_val.size,),
-    num_classes=len(target_voc)
-    ).reshape(x_val.shape[0],x_val.shape[1],len(target_voc))
+#x_train = keras.utils.to_categorical(
+#    x_train.reshape(x_train.size,),
+#    num_classes=len(input_voc)
+#    ).reshape(x_train.shape[0],x_train.shape[1],len(input_voc))
+#x_val = keras.utils.to_categorical(
+#    x_val.reshape(x_val.size,),
+#    num_classes=len(target_voc)
+#    ).reshape(x_val.shape[0],x_val.shape[1],len(target_voc))
 #v_x = keras.utils.to_categorical(v_x.reshape(16,), num_classes=10).reshape(4,4,10)
 
 # Build the model
@@ -200,22 +200,22 @@ x_val = keras.utils.to_categorical(
 print("Build model...")
 
 model = keras.Sequential([
-    #layers.Embedding(len(input_dic), 16),
-    keras.Input(shape=(input_length,len(input_dic))),
+    layers.Embedding(len(input_dic), 16),
+    #keras.Input(shape=(input_length,len(input_dic))),
     # Encoder
-    #layers.GRU(128,go_backwards=REVERSE),
+    layers.GRU(128,go_backwards=REVERSE),
     #layers.LSTM(128,go_backwards=REVERSE),
     #layers.SimpleRNN(128,go_backwards=REVERSE),
     #layers.Conv1D(128,kernel_size=3,activation='relu'),
     #layers.MaxPooling1D(),
     #layers.Conv1D(128,kernel_size=3,activation='relu'),
     #layers.MaxPooling1D(),
-    layers.Flatten(),
+    #layers.Flatten(),
     #layers.Dense(1024,activation='relu'),
     # Expand to answer length and peeking hidden states
     layers.RepeatVector(output_length),
     # Decoder
-    #layers.GRU(128, return_sequences=True),
+    layers.GRU(128, return_sequences=True),
     #layers.LSTM(128, return_sequences=True),
     #layers.SimpleRNN(128, return_sequences=True),
     #layers.Dense(128,activation='relu'),
@@ -238,7 +238,7 @@ model.summary()
 epochs = 30
 batch_size = 32
 
-callback = CustomCallback()
+#callback = CustomCallback()
 history = model.fit(
     x_train,
     y_train,
@@ -253,10 +253,10 @@ for i in range(10):
     question = questions[idx]
     input = question.reshape(1,input_length)
 
-    input = keras.utils.to_categorical(
-        input.reshape(input.size,),
-        num_classes=len(input_voc)
-        ).reshape(input.shape[0],input.shape[1],len(input_voc))
+    #input = keras.utils.to_categorical(
+    #    input.reshape(input.size,),
+    #    num_classes=len(input_voc)
+    #    ).reshape(input.shape[0],input.shape[1],len(input_voc))
 
     predict = model.predict(input)
     predict_seq = np.argmax(predict[0].reshape(output_length,len(target_dic)),axis=1)

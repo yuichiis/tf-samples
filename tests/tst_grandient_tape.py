@@ -15,6 +15,44 @@ import tensorflow as tf
 #t = np.array([0.0, 1.0 , 0.0])
 #func = keras.losses.BinaryCrossentropy(from_logits=True)
 
+def numerical_gradient(
+        f,
+        *variables,
+        h=None):
+
+    if h is None:
+        h = 1e-4
+    if not callable(f):
+        raise Exception("f must callable or array of f and h")
+
+    grads = []
+    new_variables = []
+    for x in variables:
+        if isinstance(x, tf.Tensor):
+            x = x.numpy()
+        new_variables.append(x)
+    variables = new_variables
+
+    for x in variables:
+        g = np.zeros_like(x)
+        grads.append(g)
+        it = np.nditer(x, flags=['multi_index'], op_flags=['readwrite'])
+        h2 = h*2
+        with it:
+            while not it.finished:
+                idx = it.multi_index
+                value = xx[idx]
+                x[idx] = value + h
+                y1 = f(*variables)
+                x[idx] = value - h
+                y2 = f(*variables)
+                d = (y1 - y2)
+                g[idx] = np.sum(d)/h2
+                x[idx] = value
+                it.iternext()
+    return grads
+
+
 x = np.array([
     [0,1,2,9],
     #[1],
@@ -31,7 +69,7 @@ func = keras.layers.GRU(
         input_shape=(4,10),
         #input_shape=(1,10),
         activation=None,
-        recurrent_activation=None,
+        #recurrent_activation=None,
         return_sequences=True,
         kernel_initializer='ones',
         recurrent_initializer='ones',
@@ -52,3 +90,6 @@ with tf.GradientTape() as g:
 dy_dx = g.gradient(yy,xx)
 print(yy)
 print(dy_dx)
+
+grads = numerical_gradient(func,x,h=1e-3)
+print(grads[0])
