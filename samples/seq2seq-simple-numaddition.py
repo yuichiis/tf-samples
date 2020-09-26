@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 # Parameters for the model and dataset.
 #TRAINING_SIZE = 50000
 TRAINING_SIZE = 5000
-DIGITS = 2
+DIGITS = 3
 REVERSE = True
 
 # Generate the data
