@@ -91,7 +91,7 @@ def load_dataset(path, num_examples=None):
   return input_tensor, target_tensor, inp_lang_tokenizer, targ_lang_tokenizer
 
 # Try experimenting with the size of that dataset
-num_examples = 30000 #30000
+num_examples = 10000 #30000
 print("Generating data...")
 input_tensor, target_tensor, inp_lang, targ_lang = load_dataset(path_to_file, num_examples)
 
@@ -121,10 +121,10 @@ print ("Target Language; index to word mapping")
 convert(targ_lang, target_tensor_train[0])
 
 BUFFER_SIZE = len(input_tensor_train)
-BATCH_SIZE = 64
+BATCH_SIZE = 128
 steps_per_epoch = len(input_tensor_train)//BATCH_SIZE
-embedding_dim = 256#256
-units = 1024#1024
+embedding_dim = 128#256
+units = 256#1024
 print("embedding_dim: ",embedding_dim)
 print("units: ",units)
 vocab_inp_size = len(inp_lang.word_index)+1
@@ -313,7 +313,7 @@ def train_step(inp, targ, enc_hidden):
 
   return batch_loss
 
-EPOCHS = 10
+EPOCHS = 30#10
 
 for epoch in range(EPOCHS):
   start = time.time()

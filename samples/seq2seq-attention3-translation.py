@@ -183,12 +183,14 @@ class Decoder(tf.keras.Model):
 class Seq2seq(tf.keras.Model):
     def __init__(self,
         vocab_inp_size, vocab_tar_size, embedding_dim, units,
+        start_voc_id,
         **kwargs
     ):
         super(Seq2seq, self).__init__(**kwargs)
         self.encoder = Encoder(vocab_inp_size, embedding_dim, units)
         self.decoder = Decoder(vocab_tar_size, embedding_dim, units)
         self.attention_layer = BahdanauAttention(10)
+        self.start_voc_id = start_voc_id
 
     def call(
         self,
@@ -202,7 +204,7 @@ class Seq2seq(tf.keras.Model):
         enc_output, enc_hidden = self.encoder(inp, enc_hidden)
         dec_hidden = enc_hidden
         dec_input = tf.expand_dims(
-            tf.repeat([targ_lang.word_index['<start>']], repeats=[batch_size]), 1)
+            tf.repeat([self.start_voc_id], repeats=[batch_size]), 1)
         outs = []
         # Teacher forcing - feeding the target as the next input
         for t in range(targ.shape[1]):
@@ -280,26 +282,26 @@ class Seq2seq(tf.keras.Model):
         enc_out, enc_hidden = self.encoder(inputs, hidden)
 
         dec_hidden = enc_hidden
-        dec_input = tf.expand_dims([targ_lang.word_index['<start>']], 0)
+        dec_input = tf.expand_dims([self.start_voc_id], 0)
 
         for t in range(max_length_targ):
             predictions, dec_hidden, attention_weights = self.decoder(dec_input,
                                                          dec_hidden,
                                                          enc_out)
 
-        # storing the attention weights to plot later on
-        attention_weights = tf.reshape(attention_weights, (-1, ))
-        attention_plot[t] = attention_weights.numpy()
+            # storing the attention weights to plot later on
+            attention_weights = tf.reshape(attention_weights, (-1, ))
+            attention_plot[t] = attention_weights.numpy()
 
-        predicted_id = tf.argmax(predictions[0]).numpy()
+            predicted_id = tf.argmax(predictions[0]).numpy()
 
-        result += targ_lang.index_word[predicted_id] + ' '
+            result += targ_lang.index_word[predicted_id] + ' '
 
-        if targ_lang.index_word[predicted_id] == '<end>':
-            return result, sentence, attention_plot
+            if targ_lang.index_word[predicted_id] == '<end>':
+                return result, sentence, attention_plot
 
-        # the predicted ID is fed back into the model
-        dec_input = tf.expand_dims([predicted_id], 0)
+            # the predicted ID is fed back into the model
+            dec_input = tf.expand_dims([predicted_id], 0)
 
         return result, sentence, attention_plot
 
@@ -385,10 +387,16 @@ class Seq2seq(tf.keras.Model):
 #print('en=',len(en))
 #print('sp=',len(sp))
 
+
+num_examples = 20000 #30000
+EPOCHS = 30#10
+BATCH_SIZE = 64
+embedding_dim = 128#256
+units = 256#1024
+
 # Try experimenting with the size of that dataset
 dataset = EngFraDataset()
 path_to_file = dataset.download()
-num_examples = 10000 #30000
 print("Generating data...")
 input_tensor, target_tensor, inp_lang, targ_lang = dataset.load_dataset(path_to_file, num_examples)
 
@@ -411,10 +419,9 @@ print(len(input_tensor_train), len(target_tensor_train), len(input_tensor_val), 
 #convert(targ_lang, target_tensor_train[0])
 
 BUFFER_SIZE = len(input_tensor_train)
-BATCH_SIZE = 64
-steps_per_epoch = len(input_tensor_train)//BATCH_SIZE
-embedding_dim = 128#256
-units = 256#1024
+#steps_per_epoch = len(input_tensor_train)//BATCH_SIZE
+print("embedding_dim: ",embedding_dim)
+print("units: ",units)
 print("Input  length: ",max_length_inp)
 print("Target length: ",max_length_targ)
 vocab_inp_size = len(inp_lang.word_index)+1
@@ -468,7 +475,7 @@ def loss_function(real, pred):
 
   return tf.reduce_mean(loss_)
 
-checkpoint_dir = './training_checkpoints'
+checkpoint_dir = './training_checkpoints/ckpt'
 #checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
 #checkpoint = tf.train.Checkpoint(optimizer=optimizer,
 #                                 encoder=encoder,
@@ -476,13 +483,13 @@ checkpoint_dir = './training_checkpoints'
 model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_dir,
     save_weights_only=True,
-    monitor='val_acc',
-    mode='max',
+    monitor='val_accuracy',
+    mode='auto',
     save_best_only=True)
 
-EPOCHS = 10
 seq2seq = Seq2seq(
     vocab_inp_size, vocab_tar_size, embedding_dim, units,
+    targ_lang.word_index['<start>'],
 )
 
 print("Compile model...")
@@ -501,9 +508,11 @@ history = seq2seq.fit(
     batch_size=BATCH_SIZE,
     epochs=EPOCHS,
     validation_data=(input_tensor_val,target_tensor_val),
+    callbacks=[model_checkpoint_callback],
 )
 
-seq2seq.load_weights(checkpoint_dir)
+#seq2seq.load_weights(checkpoint_dir)
+
 # restoring the latest checkpoint in checkpoint_dir
 #checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
 #print(sp[num_examples-1])
@@ -512,11 +521,11 @@ seq2seq.load_weights(checkpoint_dir)
 #print(en[num_examples-10])
 #print(sp[num_examples-100])
 #print(en[num_examples-100])
-seq2seq.translate(u'el cogio el telefono.')
+seq2seq.translate(u'el cogio el telefono.',dataset)
 print('correct: he hung up.')
-seq2seq.translate(u'confien.')
+seq2seq.translate(u'confien.',dataset)
 print('correct: have faith.')
-seq2seq.translate(u'llega a tiempo.')
+seq2seq.translate(u'llega a tiempo.',dataset)
 print('correct: be on time.')
 
 #translate(u'hace mucho frio aqui.')

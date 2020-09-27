@@ -130,7 +130,3 @@ dmypy.json
 
 # working files
 *.pkl
-training_checkpoints/
-s2s/
-fra-eng.zip
-fra-eng/

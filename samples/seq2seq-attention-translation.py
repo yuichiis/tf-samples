@@ -71,14 +71,35 @@ class EngFraDataset:
 
         input_tensor, inp_lang_tokenizer = self.tokenize(inp_lang)
         target_tensor, targ_lang_tokenizer = self.tokenize(targ_lang)
+        input_tensor = self.shuffle(input_tensor)
+        target_tensor = self.shuffle(target_tensor)
 
         return input_tensor, target_tensor, inp_lang_tokenizer, targ_lang_tokenizer
+
+    def shuffle(self, tensor):
+        choice = np.random.choice(len(tensor),len(tensor),replace=False)
+        result = np.zeros_like(tensor)
+        for i in range(len(tensor)):
+            result[i,:] = tensor[choice[i],:]
+        return result
 
     def convert(self, lang, tensor):
         for t in tensor:
             if t!=0:
                 print ("%d ----> %s" % (t, lang.index_word[t]))
 
+    def seq2str(self,sequence,lang):
+        result = ''
+        for word_id in sequence:
+            if word_id == 0:
+                result += ' '
+            else:
+                word = lang.index_word[word_id]
+                if word == '<end>':
+                    return result
+                if word != '<start>':
+                    result += word + ' '
+        return result
 
 class Encoder(keras.Model):
     '''
@@ -320,23 +341,23 @@ def loss_function(real, pred):
   return tf.reduce_mean(loss_)
 
 
-epochs = 30#30;
-batch_size = 128;
-word_vect_size=256#256
+epochs = 60#30
+batch_size = 64
+word_vect_size=128#256
 recurrent_units=256#1024
 num_examples=10000#30000
-
-print("embedding_dim: ",word_vect_size)
-print("units: ",recurrent_units)
 
 dataset = EngFraDataset()
 
 print("Generating data...")
 input_tensor, target_tensor, inp_lang, targ_lang = dataset.load_data(num_examples=num_examples)
 corpus_size = len(input_tensor)
+print("embedding_dim:",word_vect_size)
+print("units:",recurrent_units)
 print("Total questions:", corpus_size)
 #input_voc,target_voc,input_dic,target_dic=dataset.dicts()
-
+print("Input word dictionary:",len(inp_lang.index_word))
+print("Target word dictionary:",len(targ_lang.index_word))
 # Explicitly set apart 10% for validation data that we never train over.
 #split_at = len(questions) - len(questions) // 10
 #(x_train, x_val) = questions[:split_at], questions[split_at:]
@@ -344,12 +365,8 @@ print("Total questions:", corpus_size)
 
 input_length  = input_tensor.shape[1] #DIGITS*2 + 1;
 output_length = target_tensor.shape[1] #DIGITS + 1;
-print("Input length =",input_length)
-print("Output length=",output_length)
-
-print("Training Data:")
-print(input_tensor.shape)
-print(target_tensor.shape)
+print("Input length:",input_length)
+print("Output length:",output_length)
 
 seq2seq = Seq2seq(
     input_length=input_length,
@@ -371,13 +388,27 @@ seq2seq.compile(
     metrics=['accuracy'],
     )
 
+checkpoint_filepath = './seq2seq-attention-translation/ckpt'
+
+checkpoint = tf.keras.callbacks.ModelCheckpoint(
+    filepath=checkpoint_filepath,
+    save_weights_only=True,
+    monitor='val_accuracy',
+    mode='auto',
+    save_best_only=True)
+
+if os.path.exists(checkpoint_filepath):
+    print("Loading weights")
+    model.load_weights(checkpoint_filepath)
+
 print("Train model...")
 history = seq2seq.fit(
     input_tensor,
     target_tensor,
     batch_size=batch_size,
     epochs=epochs,
-    validation_split=0.2,
+    validation_split=0.1,
+    callbacks=[checkpoint],
 )
 
 for i in range(10):
@@ -394,11 +425,15 @@ for i in range(10):
     #predict_seq = np.argmax(predict[0].reshape(output_length,len(target_dic)),axis=1)
     predict_seq = seq2seq.translate(question);
 
-    predict_str = dataset.seq2str(predict_seq,target_voc)
-    question_str = dataset.seq2str(question,input_voc)
-    answer_str = dataset.seq2str(answers[idx],target_voc)
-    correct = '*' if predict_str==answer_str else ' '
-    print('%s=%s : %s %s' % (question_str,predict_str,correct,answer_str))
+    predict_str = dataset.seq2str(predict_seq,targ_lang)
+    question_str = dataset.seq2str(question,inp_lang)
+    answer_str = dataset.seq2str(target_tensor[idx],targ_lang)
+    #correct = '*' if predict_str==answer_str else ' '
+    #print('%s=%s : %s %s' % (question_str,predict_str,correct,answer_str))
+    print('Input    : {}'.format(question_str))
+    print('Predicted: {}'.format(predict_str))
+    print('Correct  : {}'.format(answer_str))
+    print()
 
 plt.plot(history.history['loss'],label='loss')
 plt.plot(history.history['accuracy'],label='accuracy')
