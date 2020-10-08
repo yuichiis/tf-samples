@@ -137,34 +137,34 @@ class Encoder(tf.keras.Model):
 
 
 
-class BahdanauAttention(tf.keras.layers.Layer):
-  def __init__(self, units):
-    super(BahdanauAttention, self).__init__()
-    self.W1 = tf.keras.layers.Dense(units)
-    self.W2 = tf.keras.layers.Dense(units)
-    self.V = tf.keras.layers.Dense(1)
-
-  def call(self, query, values):
-    # query hidden state shape == (batch_size, hidden size)
-    # query_with_time_axis shape == (batch_size, 1, hidden size)
-    # values shape == (batch_size, max_len, hidden size)
-    # we are doing this to broadcast addition along the time axis to calculate the score
-    query_with_time_axis = tf.expand_dims(query, 1)
-
-    # score shape == (batch_size, max_length, 1)
-    # we get 1 at the last axis because we are applying score to self.V
-    # the shape of the tensor before applying self.V is (batch_size, max_length, units)
-    score = self.V(tf.nn.tanh(
-        self.W1(query_with_time_axis) + self.W2(values)))
-
-    # attention_weights shape == (batch_size, max_length, 1)
-    attention_weights = tf.nn.softmax(score, axis=1)
-
-    # context_vector shape after sum == (batch_size, hidden_size)
-    context_vector = attention_weights * values
-    context_vector = tf.reduce_sum(context_vector, axis=1)
-
-    return context_vector, attention_weights
+#class BahdanauAttention(tf.keras.layers.Layer):
+#  def __init__(self, units):
+#    super(BahdanauAttention, self).__init__()
+#    self.W1 = tf.keras.layers.Dense(units)
+#    self.W2 = tf.keras.layers.Dense(units)
+#    self.V = tf.keras.layers.Dense(1)
+#
+#  def call(self, query, values):
+#    # query hidden state shape == (batch_size, hidden size)
+#    # query_with_time_axis shape == (batch_size, 1, hidden size)
+#    # values shape == (batch_size, max_len, hidden size)
+#    # we are doing this to broadcast addition along the time axis to calculate the score
+#    query_with_time_axis = tf.expand_dims(query, 1)
+#
+#    # score shape == (batch_size, max_length, 1)
+#    # we get 1 at the last axis because we are applying score to self.V
+#    # the shape of the tensor before applying self.V is (batch_size, max_length, units)
+#    score = self.V(tf.nn.tanh(
+#        self.W1(query_with_time_axis) + self.W2(values)))
+#
+#    # attention_weights shape == (batch_size, max_length, 1)
+#    attention_weights = tf.nn.softmax(score, axis=1)
+#
+#    # context_vector shape after sum == (batch_size, hidden_size)
+#    context_vector = attention_weights * values
+#    context_vector = tf.reduce_sum(context_vector, axis=1)
+#
+#    return context_vector, attention_weights
 
 
 
@@ -181,17 +181,22 @@ class Decoder(tf.keras.Model):
     self.fc = tf.keras.layers.Dense(vocab_size)
 
     # used for attention
-    self.attention = BahdanauAttention(self.dec_units)
+    #self.attention = BahdanauAttention(self.dec_units)
+    self.attention = tf.keras.layers.Attention()
 
   def call(self, x, hidden, enc_output):
+
+    hidden = tf.expand_dims(hidden,1)
+    # hidden shape == (batch_size, 1, hidden_size)
     # enc_output shape == (batch_size, max_length, hidden_size)
-    context_vector, attention_weights = self.attention(hidden, enc_output)
+    context_vector = self.attention([hidden, enc_output])
+    # context_vector shape == (batch_size, 1, hidden_size)
 
     # x shape after passing through embedding == (batch_size, 1, embedding_dim)
     x = self.embedding(x)
 
     # x shape after concatenation == (batch_size, 1, embedding_dim + hidden_size)
-    x = tf.concat([tf.expand_dims(context_vector, 1), x], axis=-1)
+    x = tf.concat([context_vector, x], axis=-1)
 
     # passing the concatenated vector to the GRU
     output, state = self.gru(x)
@@ -202,7 +207,7 @@ class Decoder(tf.keras.Model):
     # output shape == (batch_size, vocab)
     x = self.fc(output)
 
-    return x, state, attention_weights
+    return x, state#, attention_weights
 
 
 class Seq2seq(tf.keras.Model):
@@ -253,12 +258,9 @@ class Seq2seq(tf.keras.Model):
             # using teacher forcing
             dec_input = tf.expand_dims(targ[:, t], 1)
             # passing enc_output to the decoder
-            predictions, dec_hidden, _ = self.decoder(dec_input, dec_hidden, enc_output)
+            predictions, dec_hidden = self.decoder(dec_input, dec_hidden, enc_output)
             outs.append(predictions)
             #loss += loss_function(targ[:, t], predictions)
-
-            # using teacher forcing
-            #dec_input = tf.expand_dims(targ[:, t], 1)
 
         outputs = tf.stack(outs,axis=1)
         return outputs
@@ -270,6 +272,7 @@ class Seq2seq(tf.keras.Model):
         '''train step callback'''
         inputs,trues = train_data
         #start_dec_input = self.first_decoder_input(tf.shape(trues)[0])
+        #inputs = (inputs,start_dec_input,trues)
         inputs = (inputs,trues)
         sft_trues = self.trimLeftSentence(trues)
 
@@ -337,9 +340,13 @@ class Seq2seq(tf.keras.Model):
         dec_input = tf.expand_dims([self.start_voc_id], 0)
 
         for t in range(max_length_targ):
-            predictions, dec_hidden, attention_weights = self.decoder(dec_input,
+            predictions, dec_hidden = self.decoder(dec_input,
                                                          dec_hidden,
                                                          enc_out)
+
+            attention_weights = tf.matmul(dec_hidden,enc_out,transpose_b=True)
+            #print('attention_weights',attention_weights.shape)
+            attention_weights = tf.nn.softmax(attention_weights[0,0,:])
 
             # storing the attention weights to plot later on
             attention_weights = tf.reshape(attention_weights, (-1, ))
@@ -442,11 +449,11 @@ class Seq2seq(tf.keras.Model):
 #print('sp=',len(sp))
 
 
-num_examples = 5000 #30000
-EPOCHS = 1#30#10
+num_examples = 5000#10000 #30000
+EPOCHS = 10
 BATCH_SIZE = 64
-embedding_dim = 128#256
-units = 256#1024
+embedding_dim = 128#128#256
+units = 256#512#512#1024
 
 # Try experimenting with the size of that dataset
 tr_dataset = EngFraDataset()
@@ -501,16 +508,16 @@ print ('Encoder Hidden state shape: (batch size, units) {}'.format(sample_hidden
 
 
 
-attention_layer = BahdanauAttention(10)
-attention_result, attention_weights = attention_layer(sample_hidden, sample_output)
-
-print("Attention result shape: (batch size, units) {}".format(attention_result.shape))
-print("Attention weights shape: (batch_size, sequence_length, 1) {}".format(attention_weights.shape))
+#attention_layer = BahdanauAttention(10)
+#attention_result, attention_weights = attention_layer(sample_hidden, sample_output)
+#
+#print("Attention result shape: (batch size, units) {}".format(attention_result.shape))
+#print("Attention weights shape: (batch_size, sequence_length, 1) {}".format(attention_weights.shape))
 
 decoder = Decoder(vocab_tar_size, embedding_dim, units)
 
 
-sample_decoder_output, _, _ = decoder(tf.random.uniform((BATCH_SIZE, 1)),
+sample_decoder_output, _ = decoder(tf.random.uniform((BATCH_SIZE, 1)),
                                       sample_hidden, sample_output)
 
 print ('Decoder output shape: (batch_size, vocab size) {}'.format(sample_decoder_output.shape))
@@ -530,7 +537,7 @@ def loss_function(real, pred):
 
   return tf.reduce_mean(loss_)
 
-checkpoint_dir = './seq2seq-attention3-translation/ckpt'
+checkpoint_dir = './seq2seq-attention5-translation/ckpt'
 #checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
 #checkpoint = tf.train.Checkpoint(optimizer=optimizer,
 #                                 encoder=encoder,

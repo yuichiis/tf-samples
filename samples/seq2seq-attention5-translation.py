@@ -137,34 +137,34 @@ class Encoder(tf.keras.Model):
 
 
 
-class BahdanauAttention(tf.keras.layers.Layer):
-  def __init__(self, units):
-    super(BahdanauAttention, self).__init__()
-    self.W1 = tf.keras.layers.Dense(units)
-    self.W2 = tf.keras.layers.Dense(units)
-    self.V = tf.keras.layers.Dense(1)
-
-  def call(self, query, values):
-    # query hidden state shape == (batch_size, hidden size)
-    # query_with_time_axis shape == (batch_size, 1, hidden size)
-    # values shape == (batch_size, max_len, hidden size)
-    # we are doing this to broadcast addition along the time axis to calculate the score
-    query_with_time_axis = tf.expand_dims(query, 1)
-
-    # score shape == (batch_size, max_length, 1)
-    # we get 1 at the last axis because we are applying score to self.V
-    # the shape of the tensor before applying self.V is (batch_size, max_length, units)
-    score = self.V(tf.nn.tanh(
-        self.W1(query_with_time_axis) + self.W2(values)))
-
-    # attention_weights shape == (batch_size, max_length, 1)
-    attention_weights = tf.nn.softmax(score, axis=1)
-
-    # context_vector shape after sum == (batch_size, hidden_size)
-    context_vector = attention_weights * values
-    context_vector = tf.reduce_sum(context_vector, axis=1)
-
-    return context_vector, attention_weights
+#class BahdanauAttention(tf.keras.layers.Layer):
+#  def __init__(self, units):
+#    super(BahdanauAttention, self).__init__()
+#    self.W1 = tf.keras.layers.Dense(units)
+#    self.W2 = tf.keras.layers.Dense(units)
+#    self.V = tf.keras.layers.Dense(1)
+#
+#  def call(self, query, values):
+#    # query hidden state shape == (batch_size, hidden size)
+#    # query_with_time_axis shape == (batch_size, 1, hidden size)
+#    # values shape == (batch_size, max_len, hidden size)
+#    # we are doing this to broadcast addition along the time axis to calculate the score
+#    query_with_time_axis = tf.expand_dims(query, 1)
+#
+#    # score shape == (batch_size, max_length, 1)
+#    # we get 1 at the last axis because we are applying score to self.V
+#    # the shape of the tensor before applying self.V is (batch_size, max_length, units)
+#    score = self.V(tf.nn.tanh(
+#        self.W1(query_with_time_axis) + self.W2(values)))
+#
+#    # attention_weights shape == (batch_size, max_length, 1)
+#    attention_weights = tf.nn.softmax(score, axis=1)
+#
+#    # context_vector shape after sum == (batch_size, hidden_size)
+#    context_vector = attention_weights * values
+#    context_vector = tf.reduce_sum(context_vector, axis=1)
+#
+#    return context_vector, attention_weights
 
 
 
@@ -181,17 +181,22 @@ class Decoder(tf.keras.Model):
     self.fc = tf.keras.layers.Dense(vocab_size)
 
     # used for attention
-    self.attention = BahdanauAttention(self.dec_units)
+    #self.attention = BahdanauAttention(self.dec_units)
+    self.attention = tf.keras.layers.Attention()
 
   def call(self, x, hidden, enc_output):
+
+    hidden = tf.expand_dims(hidden,1)
+    # hidden shape == (batch_size, 1, hidden_size)
     # enc_output shape == (batch_size, max_length, hidden_size)
-    context_vector, attention_weights = self.attention(hidden, enc_output)
+    context_vector = self.attention([hidden, enc_output])
+    # context_vector shape == (batch_size, 1, hidden_size)
 
     # x shape after passing through embedding == (batch_size, 1, embedding_dim)
     x = self.embedding(x)
 
     # x shape after concatenation == (batch_size, 1, embedding_dim + hidden_size)
-    x = tf.concat([tf.expand_dims(context_vector, 1), x], axis=-1)
+    x = tf.concat([context_vector, x], axis=-1)
 
     # passing the concatenated vector to the GRU
     output, state = self.gru(x)
@@ -202,19 +207,27 @@ class Decoder(tf.keras.Model):
     # output shape == (batch_size, vocab)
     x = self.fc(output)
 
-    return x, state, attention_weights
+    return x, state#, attention_weights
 
 
 class Seq2seq(tf.keras.Model):
     def __init__(self,
-        vocab_inp_size, vocab_tar_size, embedding_dim, units,
-        start_voc_id,
+        input_length=None,
+        vocab_inp_size=None,
+        output_length=None,
+        vocab_tar_size=None,
+        embedding_dim=None,
+        units=None,
+        start_voc_id=None,
         **kwargs
     ):
         super(Seq2seq, self).__init__(**kwargs)
         self.encoder = Encoder(vocab_inp_size, embedding_dim, units)
         self.decoder = Decoder(vocab_tar_size, embedding_dim, units)
+        self.input_length = input_length
+        self.output_length = output_length
         self.start_voc_id = start_voc_id
+        self.units = units
 
     def first_decoder_input(self,batch_size):
         start_dec_input = tf.expand_dims(
@@ -253,12 +266,9 @@ class Seq2seq(tf.keras.Model):
             # using teacher forcing
             dec_input = tf.expand_dims(targ[:, t], 1)
             # passing enc_output to the decoder
-            predictions, dec_hidden, _ = self.decoder(dec_input, dec_hidden, enc_output)
+            predictions, dec_hidden = self.decoder(dec_input, dec_hidden, enc_output)
             outs.append(predictions)
             #loss += loss_function(targ[:, t], predictions)
-
-            # using teacher forcing
-            #dec_input = tf.expand_dims(targ[:, t], 1)
 
         outputs = tf.stack(outs,axis=1)
         return outputs
@@ -270,6 +280,7 @@ class Seq2seq(tf.keras.Model):
         '''train step callback'''
         inputs,trues = train_data
         #start_dec_input = self.first_decoder_input(tf.shape(trues)[0])
+        #inputs = (inputs,start_dec_input,trues)
         inputs = (inputs,trues)
         sft_trues = self.trimLeftSentence(trues)
 
@@ -318,28 +329,32 @@ class Seq2seq(tf.keras.Model):
         self.plot_attention(attention_plot, sentence.split(' '), result.split(' '))
 
     def evaluate_sentence(self,sentence, dataset):
-        attention_plot = np.zeros((max_length_targ, max_length_inp))
+        attention_plot = np.zeros((self.output_length, self.input_length))
 
         sentence = dataset.preprocess_sentence(sentence)
 
         inputs = [inp_lang.word_index[i] for i in sentence.split(' ')]
         inputs = tf.keras.preprocessing.sequence.pad_sequences([inputs],
-                                                         maxlen=max_length_inp,
+                                                         maxlen=self.input_length,
                                                          padding='post')
         inputs = tf.convert_to_tensor(inputs)
 
         result = ''
 
-        hidden = [tf.zeros((1, units))]
+        hidden = [tf.zeros((1, self.units))]
         enc_out, enc_hidden = self.encoder(inputs, hidden)
 
         dec_hidden = enc_hidden
         dec_input = tf.expand_dims([self.start_voc_id], 0)
 
-        for t in range(max_length_targ):
-            predictions, dec_hidden, attention_weights = self.decoder(dec_input,
+        for t in range(self.output_length):
+            predictions, dec_hidden = self.decoder(dec_input,
                                                          dec_hidden,
                                                          enc_out)
+
+            attention_weights = tf.matmul(dec_hidden,enc_out,transpose_b=True)
+            #print('attention_weights',attention_weights.shape)
+            attention_weights = tf.nn.softmax(attention_weights[0,0,:])
 
             # storing the attention weights to plot later on
             attention_weights = tf.reshape(attention_weights, (-1, ))
@@ -442,17 +457,17 @@ class Seq2seq(tf.keras.Model):
 #print('sp=',len(sp))
 
 
-num_examples = 5000 #30000
-EPOCHS = 1#30#10
+num_examples = 5000#10000 #30000
+EPOCHS = 1#10
 BATCH_SIZE = 64
-embedding_dim = 128#256
-units = 256#1024
+embedding_dim = 128#128#256
+units = 256#512#1024
 
 # Try experimenting with the size of that dataset
-tr_dataset = EngFraDataset()
-path_to_file = tr_dataset.download()
+dataset = EngFraDataset()
+path_to_file = dataset.download()
 print("Generating data...")
-input_tensor, target_tensor, inp_lang, targ_lang = tr_dataset.load_data(path_to_file, num_examples)
+input_tensor, target_tensor, inp_lang, targ_lang = dataset.load_data(path_to_file, num_examples)
 
 # Calculate max_length of the target tensors
 max_length_targ, max_length_inp = target_tensor.shape[1], input_tensor.shape[1]
@@ -483,10 +498,10 @@ vocab_tar_size = len(targ_lang.word_index)+1
 print("Input vocabulary size : ",vocab_inp_size)
 print("Target vocabulary size: ",vocab_tar_size)
 
-dataset = tf.data.Dataset.from_tensor_slices((input_tensor_train, target_tensor_train)).shuffle(BUFFER_SIZE)
-dataset = dataset.batch(BATCH_SIZE, drop_remainder=True)
+example_dataset = tf.data.Dataset.from_tensor_slices((input_tensor_train, target_tensor_train)).shuffle(BUFFER_SIZE)
+example_dataset = example_dataset.batch(BATCH_SIZE, drop_remainder=True)
 
-example_input_batch, example_target_batch = next(iter(dataset))
+example_input_batch, example_target_batch = next(iter(example_dataset))
 example_input_batch.shape, example_target_batch.shape
 
 
@@ -501,16 +516,16 @@ print ('Encoder Hidden state shape: (batch size, units) {}'.format(sample_hidden
 
 
 
-attention_layer = BahdanauAttention(10)
-attention_result, attention_weights = attention_layer(sample_hidden, sample_output)
-
-print("Attention result shape: (batch size, units) {}".format(attention_result.shape))
-print("Attention weights shape: (batch_size, sequence_length, 1) {}".format(attention_weights.shape))
+#attention_layer = BahdanauAttention(10)
+#attention_result, attention_weights = attention_layer(sample_hidden, sample_output)
+#
+#print("Attention result shape: (batch size, units) {}".format(attention_result.shape))
+#print("Attention weights shape: (batch_size, sequence_length, 1) {}".format(attention_weights.shape))
 
 decoder = Decoder(vocab_tar_size, embedding_dim, units)
 
 
-sample_decoder_output, _, _ = decoder(tf.random.uniform((BATCH_SIZE, 1)),
+sample_decoder_output, _ = decoder(tf.random.uniform((BATCH_SIZE, 1)),
                                       sample_hidden, sample_output)
 
 print ('Decoder output shape: (batch_size, vocab size) {}'.format(sample_decoder_output.shape))
@@ -530,7 +545,7 @@ def loss_function(real, pred):
 
   return tf.reduce_mean(loss_)
 
-checkpoint_dir = './seq2seq-attention3-translation/ckpt'
+checkpoint_dir = './seq2seq-attention5-translation/ckpt'
 #checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
 #checkpoint = tf.train.Checkpoint(optimizer=optimizer,
 #                                 encoder=encoder,
@@ -543,8 +558,13 @@ model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     save_best_only=True)
 
 seq2seq = Seq2seq(
-    vocab_inp_size, vocab_tar_size, embedding_dim, units,
-    targ_lang.word_index['<start>'],
+    input_length=max_length_inp,
+    vocab_inp_size=vocab_inp_size,
+    output_length=max_length_targ,
+    vocab_tar_size=vocab_tar_size,
+    embedding_dim=embedding_dim,
+    units=units,
+    start_voc_id=targ_lang.word_index['<start>'],
 )
 
 print("Compile model...")
@@ -601,10 +621,10 @@ for i in range(10):
 
     #predict = model.predict(input)
     #predict_seq = np.argmax(predict[0].reshape(output_length,len(target_dic)),axis=1)
-    sentence = tr_dataset.seq2str(question,inp_lang)
-    predict_seq = seq2seq.translate(sentence, tr_dataset);
+    sentence = dataset.seq2str(question,inp_lang)
+    predict_seq = seq2seq.translate(sentence, dataset);
     answer = target_tensor[idx]
-    sentence = tr_dataset.seq2str(answer,targ_lang)
+    sentence = dataset.seq2str(answer,targ_lang)
     print('Target: %s' % (sentence))
     print()
 

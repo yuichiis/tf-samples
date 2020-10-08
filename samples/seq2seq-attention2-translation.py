@@ -91,7 +91,7 @@ def load_dataset(path, num_examples=None):
   return input_tensor, target_tensor, inp_lang_tokenizer, targ_lang_tokenizer
 
 # Try experimenting with the size of that dataset
-num_examples = 10000 #30000
+num_examples = 100#5000 #30000
 print("Generating data...")
 input_tensor, target_tensor, inp_lang, targ_lang = load_dataset(path_to_file, num_examples)
 
@@ -100,7 +100,7 @@ max_length_targ, max_length_inp = target_tensor.shape[1], input_tensor.shape[1]
 
 # Creating training and validation sets using an 80-20 split
 #input_tensor_train, input_tensor_val, target_tensor_train, target_tensor_val = train_test_split(input_tensor, target_tensor, test_size=0.2)
-split_at = len(input_tensor) - len(input_tensor) // 10 * 2
+split_at = len(input_tensor) - len(input_tensor) // 10
 input_tensor_train,  input_tensor_val  = (input_tensor[:split_at], input_tensor[split_at:])
 target_tensor_train, target_tensor_val = (target_tensor[:split_at],target_tensor[split_at:])
 
@@ -121,7 +121,7 @@ print ("Target Language; index to word mapping")
 convert(targ_lang, target_tensor_train[0])
 
 BUFFER_SIZE = len(input_tensor_train)
-BATCH_SIZE = 128
+BATCH_SIZE = 64
 steps_per_epoch = len(input_tensor_train)//BATCH_SIZE
 embedding_dim = 128#256
 units = 256#1024
@@ -232,13 +232,21 @@ class Decoder(tf.keras.Model):
 
     # used for attention
     self.attention = BahdanauAttention(self.dec_units)
+    #self.attention = tf.keras.layers.Attention()
 
   def call(self, x, hidden, enc_output):
     # enc_output shape == (batch_size, max_length, hidden_size)
+    #print('hidden',hidden.shape)
+    #print('enc_output',enc_output.shape)
     context_vector, attention_weights = self.attention(hidden, enc_output)
-
+    #context_vector = self.attention([hidden, enc_output])
+    #print('context_vector',context_vector.shape)
+    #context_vector = tf.reduce_sum(context_vector, axis=1)
+    #print('reduce_sum',context_vector.shape)
     # x shape after passing through embedding == (batch_size, 1, embedding_dim)
+    #print('x',x.shape)
     x = self.embedding(x)
+    #print('embedding',x.shape)
 
     # x shape after concatenation == (batch_size, 1, embedding_dim + hidden_size)
     x = tf.concat([tf.expand_dims(context_vector, 1), x], axis=-1)
@@ -285,7 +293,6 @@ checkpoint = tf.train.Checkpoint(optimizer=optimizer,
 @tf.function
 def train_step(inp, targ, enc_hidden):
   loss = 0
-
   with tf.GradientTape() as tape:
     enc_output, enc_hidden = encoder(inp, enc_hidden)
 
@@ -313,7 +320,9 @@ def train_step(inp, targ, enc_hidden):
 
   return batch_loss
 
-EPOCHS = 30#10
+#exit()
+
+EPOCHS = 1#10
 
 for epoch in range(EPOCHS):
   start = time.time()
@@ -340,7 +349,7 @@ for epoch in range(EPOCHS):
 def evaluate(sentence):
   attention_plot = np.zeros((max_length_targ, max_length_inp))
 
-  sentence = preprocess_sentence(sentence)
+  #sentence = preprocess_sentence(sentence)
 
   inputs = [inp_lang.word_index[i] for i in sentence.split(' ')]
   inputs = tf.keras.preprocessing.sequence.pad_sequences([inputs],
@@ -367,7 +376,9 @@ def evaluate(sentence):
 
     predicted_id = tf.argmax(predictions[0]).numpy()
 
-    result += targ_lang.index_word[predicted_id] + ' '
+    if result!='':
+        result += ' '
+    result += targ_lang.index_word[predicted_id]
 
     if targ_lang.index_word[predicted_id] == '<end>':
       return result, sentence, attention_plot
@@ -404,18 +415,20 @@ def translate(sentence):
 
 # restoring the latest checkpoint in checkpoint_dir
 checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
-#print(sp[num_examples-1])
-#print(en[num_examples-1])
-#print(sp[num_examples-10])
-#print(en[num_examples-10])
-#print(sp[num_examples-100])
-#print(en[num_examples-100])
-translate(u'el cogio el telefono.')
-print('correct: he hung up.')
-translate(u'confien.')
-print('correct: have faith.')
-translate(u'llega a tiempo.')
-print('correct: be on time.')
+
+for i in range(10):
+    idx = np.random.randint(0,len(input_tensor))
+    sentence = sp[idx].replace('<start> ','').replace(' <end>','')
+    translate(sentence)
+    print('correct:',en[idx])
+    print()
+
+#translate(u'el cogio el telefono.')
+#print('correct: he hung up.')
+#translate(u'confien.')
+#print('correct: have faith.')
+#translate(u'llega a tiempo.')
+#print('correct: be on time.')
 
 #translate(u'hace mucho frio aqui.')
 #translate(u'esta es mi vida.')

@@ -18,10 +18,10 @@ import time
 class EngFraDataset:
     def download(self):
         path_to_zip = tf.keras.utils.get_file(
-        'fra-eng.zip', origin='http://storage.googleapis.com/download.tensorflow.org/data/fra-eng.zip',
+        'spa-eng.zip', origin='http://storage.googleapis.com/download.tensorflow.org/data/spa-eng.zip',
         extract=True)
 
-        path_to_file = os.path.dirname(path_to_zip)+"/fra.txt"
+        path_to_file = os.path.dirname(path_to_zip)+"/spa-eng/spa.txt"
         return path_to_file
 
     # Converts the unicode file to ascii
@@ -67,8 +67,17 @@ class EngFraDataset:
 
         input_tensor, inp_lang_tokenizer = self.tokenize(inp_lang)
         target_tensor, targ_lang_tokenizer = self.tokenize(targ_lang)
+        choice = np.random.choice(len(input_tensor),len(input_tensor),replace=False)
+        input_tensor = self.shuffle(input_tensor,choice)
+        target_tensor = self.shuffle(target_tensor,choice)
 
         return input_tensor, target_tensor, inp_lang_tokenizer, targ_lang_tokenizer
+
+    def shuffle(self, tensor,choice):
+        result = np.zeros_like(tensor)
+        for i in range(len(tensor)):
+            result[i,:] = tensor[choice[i],:]
+        return result
 
     def convert(self, lang, tensor):
         for t in tensor:
