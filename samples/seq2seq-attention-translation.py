@@ -196,7 +196,7 @@ class Decoder(keras.Model):
         self,
         inputs: ndarray,
         training: bool,
-        initial_states: tuple=None,
+        initial_state: tuple=None,
         enc_outputs=None,
         **kwargs) -> tuple:
         '''forward'''
@@ -204,7 +204,11 @@ class Decoder(keras.Model):
         x = self.embedding(inputs)
         #print('inputs in decoder:',inputs.shape)
         #print('inputs.embedding in decoder:',x.shape)
-        rnn_sequence,states = self.rnn(x,training=training,initial_state=initial_states)
+        #if initial_state is not None:
+        #    print('initial_state in decoder:',initial_state[0].shape)
+        #else:
+        #    print('initial_state in decoder: None')
+        rnn_sequence,states = self.rnn(x,training=training,initial_state=initial_state)
 
         #print('query(x) in decoder:',x.shape)
         #print('value(enc_outputs) in decoder:',enc_outputs.shape)
@@ -290,6 +294,7 @@ class Seq2seq(keras.Model):
         #print('enc_outputs',enc_outputs.shape)
         #dec_inputs = self.shiftSentence(trues)
 
+        #print('enc_out_states from encoder:',states[0].shape)
         outputs, _, _ = self.decoder(dec_inputs,training,
             initial_state=states,enc_outputs=enc_outputs)
         #
@@ -454,8 +459,8 @@ def loss_function(real, pred):
   return tf.reduce_mean(loss_)
 
 
-num_examples=5000#5000#30000
-epochs = 1#10
+num_examples=5000#30000
+epochs = 10#10
 batch_size = 64
 word_vect_size=128#256
 recurrent_units=256#1024
@@ -465,12 +470,12 @@ dataset = EngFraDataset()
 print("Generating data...")
 input_tensor, target_tensor, inp_lang, targ_lang = dataset.load_data(num_examples=num_examples)
 
-print ("Input Language; index to word mapping")
-dataset.convert(inp_lang, input_tensor[0])
-print ()
-print ("Target Language; index to word mapping")
-dataset.convert(targ_lang, target_tensor[0])
-print ()
+#print ("Input Language; index to word mapping")
+#dataset.convert(inp_lang, input_tensor[0])
+#print ()
+#print ("Target Language; index to word mapping")
+#dataset.convert(targ_lang, target_tensor[0])
+#print ()
 
 
 corpus_size = len(input_tensor)

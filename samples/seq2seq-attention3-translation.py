@@ -443,7 +443,7 @@ class Seq2seq(tf.keras.Model):
 
 
 num_examples = 5000 #30000
-EPOCHS = 1#30#10
+EPOCHS = 10#30#10
 BATCH_SIZE = 64
 embedding_dim = 128#256
 units = 256#1024
