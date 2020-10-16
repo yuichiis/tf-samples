@@ -20,10 +20,10 @@ import time
 class EngFraDataset:
     def download(self):
         path_to_zip = tf.keras.utils.get_file(
-        'spa-eng.zip', origin='http://storage.googleapis.com/download.tensorflow.org/data/spa-eng.zip',
+        'fra-eng.zip', origin='http://storage.googleapis.com/download.tensorflow.org/data/fra-eng.zip',
         extract=True)
 
-        path_to_file = os.path.dirname(path_to_zip)+"/spa-eng/spa.txt"
+        path_to_file = os.path.dirname(path_to_zip)+"/fra.txt"
         return path_to_file
 
     # Converts the unicode file to ascii
@@ -54,23 +54,23 @@ class EngFraDataset:
         word_pairs = [[self.preprocess_sentence(w) for w in l.split('\t')]  for l in lines[:num_examples]]
         return zip(*word_pairs)
 
-    def tokenize(self, lang):
+    def tokenize(self, lang, num_words=None):
         lang_tokenizer = tf.keras.preprocessing.text.Tokenizer(
-        filters='')
+        num_words=num_words, filters='')
         lang_tokenizer.fit_on_texts(lang)
         tensor = lang_tokenizer.texts_to_sequences(lang)
         tensor = tf.keras.preprocessing.sequence.pad_sequences(tensor,
                                                          padding='post')
         return tensor, lang_tokenizer
 
-    def load_data(self, path=None, num_examples=None):
+    def load_data(self, path=None, num_examples=None, num_words=None):
         if path is None:
             path = self.download()
         # creating cleaned input, output pairs
         targ_lang, inp_lang = self.create_dataset(path, num_examples)
 
-        input_tensor, inp_lang_tokenizer = self.tokenize(inp_lang)
-        target_tensor, targ_lang_tokenizer = self.tokenize(targ_lang)
+        input_tensor, inp_lang_tokenizer = self.tokenize(inp_lang,num_words=num_words)
+        target_tensor, targ_lang_tokenizer = self.tokenize(targ_lang,num_words=num_words)
         choice = np.random.choice(len(input_tensor),len(input_tensor),replace=False)
         input_tensor = self.shuffle(input_tensor,choice)
         target_tensor = self.shuffle(target_tensor,choice)
@@ -460,6 +460,7 @@ def loss_function(real, pred):
 
 
 num_examples=5000#30000
+num_words = 500
 epochs = 10#10
 batch_size = 64
 word_vect_size=128#256
@@ -468,7 +469,9 @@ recurrent_units=256#1024
 dataset = EngFraDataset()
 
 print("Generating data...")
-input_tensor, target_tensor, inp_lang, targ_lang = dataset.load_data(num_examples=num_examples)
+input_tensor, target_tensor, inp_lang, targ_lang = dataset.load_data(num_examples=num_examples,num_words=num_words)
+input_vocab_size = min(len(inp_lang.index_word)+1,num_words)
+target_vocab_size = min(len(targ_lang.index_word)+1,num_words)
 
 #print ("Input Language; index to word mapping")
 #dataset.convert(inp_lang, input_tensor[0])
@@ -483,8 +486,8 @@ print("embedding_dim:",word_vect_size)
 print("units:",recurrent_units)
 print("Total questions:", corpus_size)
 #input_voc,target_voc,input_dic,target_dic=dataset.dicts()
-print("Input word dictionary:",len(inp_lang.index_word)+1)
-print("Target word dictionary:",len(targ_lang.index_word)+1)
+print("Input word dictionary:", input_vocab_size)
+print("Target word dictionary:",target_vocab_size)
 # Explicitly set apart 10% for validation data that we never train over.
 #split_at = len(questions) - len(questions) // 10
 #(x_train, x_val) = questions[:split_at], questions[split_at:]
@@ -496,14 +499,14 @@ print("Input length:",input_length)
 print("Output length:",output_length)
 
 
-encoder = Encoder(input_length,len(inp_lang.word_index)+1, word_vect_size, recurrent_units)
+encoder = Encoder(input_length,input_vocab_size, word_vect_size, recurrent_units)
 # sample input
 sample_input_batch = input_tensor[0:batch_size]
 sample_dec_input_batch = target_tensor[0:batch_size]
 sample_hidden = encoder.initialize_hidden_state(batch_size)
 sample_output, sample_hidden = encoder(sample_input_batch, sample_hidden)
 
-decoder = Decoder(output_length,len(targ_lang.word_index)+1, word_vect_size, recurrent_units)
+decoder = Decoder(output_length,target_vocab_size, word_vect_size, recurrent_units)
 sample_decoder_output, _, _ = decoder(sample_dec_input_batch,True,
                                       initial_state=sample_hidden, enc_outputs=sample_output)
 print ('Decoder output shape: (batch_size, vocab size) {}'.format(sample_decoder_output.shape))
@@ -512,9 +515,9 @@ print ('Decoder output shape: (batch_size, vocab size) {}'.format(sample_decoder
 
 seq2seq = Seq2seq(
     input_length=input_length,
-    input_vocab_size=len(inp_lang.word_index)+1,
+    input_vocab_size=input_vocab_size,
     output_length=output_length,
-    target_vocab_size=len(targ_lang.word_index)+1,
+    target_vocab_size=target_vocab_size,
     start_voc_id=targ_lang.word_index['<start>'],
     word_vect_size=word_vect_size,
     recurrent_units=recurrent_units,

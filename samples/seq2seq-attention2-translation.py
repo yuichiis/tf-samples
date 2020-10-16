@@ -14,12 +14,20 @@ import os
 import io
 import time
 
+EPOCHS = 10#10
+num_examples = 5000 #30000
+num_words = 500
+BATCH_SIZE = 64
+embedding_dim = 128#256
+units = 256#1024
+
+
 # Download the file
 path_to_zip = tf.keras.utils.get_file(
-    'spa-eng.zip', origin='http://storage.googleapis.com/download.tensorflow.org/data/spa-eng.zip',
+    'fra-eng.zip', origin='http://storage.googleapis.com/download.tensorflow.org/data/fra-eng.zip',
     extract=True)
 
-path_to_file = os.path.dirname(path_to_zip)+"/spa-eng/spa.txt"
+path_to_file = os.path.dirname(path_to_zip)+"/fra.txt"
 
 
 # Converts the unicode file to ascii
@@ -69,9 +77,9 @@ print(sp[-1])
 print('en=',len(en))
 print('sp=',len(sp))
 
-def tokenize(lang):
+def tokenize(lang,num_words=None):
   lang_tokenizer = tf.keras.preprocessing.text.Tokenizer(
-      filters='')
+      num_words=num_words,filters='')
   lang_tokenizer.fit_on_texts(lang)
 
   tensor = lang_tokenizer.texts_to_sequences(lang)
@@ -81,19 +89,19 @@ def tokenize(lang):
 
   return tensor, lang_tokenizer
 
-def load_dataset(path, num_examples=None):
+def load_dataset(path, num_examples=None,num_words=None):
   # creating cleaned input, output pairs
   targ_lang, inp_lang = create_dataset(path, num_examples)
 
-  input_tensor, inp_lang_tokenizer = tokenize(inp_lang)
-  target_tensor, targ_lang_tokenizer = tokenize(targ_lang)
+  input_tensor, inp_lang_tokenizer = tokenize(inp_lang,num_words=num_words)
+  target_tensor, targ_lang_tokenizer = tokenize(targ_lang,num_words=num_words)
 
   return input_tensor, target_tensor, inp_lang_tokenizer, targ_lang_tokenizer
 
 # Try experimenting with the size of that dataset
-num_examples = 100#5000 #30000
+#num_examples = 100#5000 #30000
 print("Generating data...")
-input_tensor, target_tensor, inp_lang, targ_lang = load_dataset(path_to_file, num_examples)
+input_tensor, target_tensor, inp_lang, targ_lang = load_dataset(path_to_file, num_examples, num_words=num_words)
 
 # Calculate max_length of the target tensors
 max_length_targ, max_length_inp = target_tensor.shape[1], input_tensor.shape[1]
@@ -121,10 +129,11 @@ print ("Target Language; index to word mapping")
 convert(targ_lang, target_tensor_train[0])
 
 BUFFER_SIZE = len(input_tensor_train)
-BATCH_SIZE = 64
+#BATCH_SIZE = 64
 steps_per_epoch = len(input_tensor_train)//BATCH_SIZE
-embedding_dim = 128#256
-units = 256#1024
+#embedding_dim = 128#256
+#units = 256#1024
+print('num_words',num_words)
 print("embedding_dim: ",embedding_dim)
 print("units: ",units)
 vocab_inp_size = len(inp_lang.word_index)+1
@@ -322,7 +331,7 @@ def train_step(inp, targ, enc_hidden):
 
 #exit()
 
-EPOCHS = 1#10
+#EPOCHS = 10#10
 
 for epoch in range(EPOCHS):
   start = time.time()
@@ -339,8 +348,8 @@ for epoch in range(EPOCHS):
                                                    batch,
                                                    batch_loss.numpy()))
   # saving (checkpoint) the model every 2 epochs
-  if (epoch + 1) % 2 == 0:
-    checkpoint.save(file_prefix = checkpoint_prefix)
+  #if (epoch + 1) % 2 == 0:
+  #  checkpoint.save(file_prefix = checkpoint_prefix)
 
   print('Epoch {} Loss {:.4f}'.format(epoch + 1,
                                       total_loss / steps_per_epoch))

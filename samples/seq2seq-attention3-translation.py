@@ -19,10 +19,10 @@ import time
 class EngFraDataset:
     def download(self):
         path_to_zip = tf.keras.utils.get_file(
-        'spa-eng.zip', origin='http://storage.googleapis.com/download.tensorflow.org/data/spa-eng.zip',
+        'fra-eng.zip', origin='http://storage.googleapis.com/download.tensorflow.org/data/fra-eng.zip',
         extract=True)
 
-        path_to_file = os.path.dirname(path_to_zip)+"/spa-eng/spa.txt"
+        path_to_file = os.path.dirname(path_to_zip)+"/fra.txt"
         return path_to_file
 
     # Converts the unicode file to ascii
@@ -240,25 +240,25 @@ class Seq2seq(tf.keras.Model):
         training=None,
         mask=None,
         ):
-        #inp, start_dec_input, targ = inputs
+        inp, start_dec_input, targ = inputs
         inp, targ = inputs
         batch_size = tf.shape(inp)[0]
         enc_hidden = self.encoder.initialize_hidden_state(batch_size)
         enc_output, enc_hidden = self.encoder(inp, enc_hidden)
         dec_hidden = enc_hidden
-        #dec_input = start_dec_input
+        dec_input = start_dec_input
         outs = []
         # Teacher forcing - feeding the target as the next input
         for t in range(targ.shape[1]-1):
-            # using teacher forcing
-            dec_input = tf.expand_dims(targ[:, t], 1)
+            ## using teacher forcing
+            ##dec_input = tf.expand_dims(targ[:, t], 1)
             # passing enc_output to the decoder
             predictions, dec_hidden, _ = self.decoder(dec_input, dec_hidden, enc_output)
             outs.append(predictions)
             #loss += loss_function(targ[:, t], predictions)
 
             # using teacher forcing
-            #dec_input = tf.expand_dims(targ[:, t], 1)
+            dec_input = tf.expand_dims(targ[:, t], 1)
 
         outputs = tf.stack(outs,axis=1)
         return outputs
@@ -269,8 +269,9 @@ class Seq2seq(tf.keras.Model):
     ):
         '''train step callback'''
         inputs,trues = train_data
-        #start_dec_input = self.first_decoder_input(tf.shape(trues)[0])
-        inputs = (inputs,trues)
+        start_dec_input = self.first_decoder_input(tf.shape(trues)[0])
+        inputs = (inputs,start_dec_input,trues)
+        #inputs = (inputs,trues)
         sft_trues = self.trimLeftSentence(trues)
 
         with tf.GradientTape() as tape:
@@ -294,9 +295,9 @@ class Seq2seq(tf.keras.Model):
         The logic for one evaluation step.
         """
         inputs,trues = data
-        #start_dec_input = self.first_decoder_input(tf.shape(trues)[0])
-        #inputs = (inputs,start_dec_input,trues)
-        inputs = (inputs,trues)
+        start_dec_input = self.first_decoder_input(tf.shape(trues)[0])
+        inputs = (inputs,start_dec_input,trues)
+        #inputs = (inputs,trues)
         dec_inputs = trues
         sft_trues = self.trimLeftSentence(trues)
 
@@ -443,6 +444,7 @@ class Seq2seq(tf.keras.Model):
 
 
 num_examples = 5000 #30000
+num_words = 500
 EPOCHS = 10#30#10
 BATCH_SIZE = 64
 embedding_dim = 128#256
