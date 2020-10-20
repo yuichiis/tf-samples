@@ -122,7 +122,6 @@ class Encoder(keras.Model):
     '''
     def __init__(
         self,
-        input_length: int,
         vocab_size: int,
         word_vect_size: int,
         recurrent_units: int,
@@ -130,7 +129,6 @@ class Encoder(keras.Model):
     ):
         '''encoder'''
         super(Encoder, self).__init__(**kwargs)
-        #self.input_shape=[input_length]
         self.vocab_size = vocab_size
         self.word_vect_size = word_vect_size
         self.recurrent_units = recurrent_units
@@ -163,7 +161,6 @@ class Decoder(keras.Model):
     '''
     def __init__(
         self,
-        input_length: int,
         vocab_size: int,
         word_vect_size: int,
         recurrent_units: int,
@@ -173,7 +170,6 @@ class Decoder(keras.Model):
         Decoder
         '''
         super(Decoder, self).__init__(**kwargs)
-        #self.input_shape=[input_length]
         self.vocab_size = vocab_size
         self.word_vect_size = word_vect_size
         self.recurrent_size = recurrent_units
@@ -232,6 +228,7 @@ class Seq2seq(keras.Model):
         word_vect_size=8,
         recurrent_units=256,
         start_voc_id=0,
+        end_voc_id=0,
         **kwargs
     ):
         '''
@@ -246,14 +243,12 @@ class Seq2seq(keras.Model):
         '''
         super(Seq2seq, self).__init__(**kwargs)
         self.encoder = Encoder(
-            input_length,
             input_vocab_size,
             word_vect_size,
             recurrent_units,
             **kwargs
         )
         self.decoder = Decoder(
-            output_length,
             target_vocab_size,
             word_vect_size,
             recurrent_units,
@@ -261,6 +256,7 @@ class Seq2seq(keras.Model):
         )
         #self.out = keras.layers.Activation('softmax')
         self.start_voc_id = start_voc_id
+        self.end_voc_id = end_voc_id
         self.input_length = input_length
         self.output_length = output_length
         self.recurrent_units = recurrent_units
@@ -308,13 +304,13 @@ class Seq2seq(keras.Model):
         '''train step callback'''
         inputs,trues = train_data
         #dec_inputs = self.shiftSentence(trues)
-        dec_inputs = trues
+        #dec_inputs = trues
         sft_trues = self.shiftLeftSentence(trues)
 
         with tf.GradientTape() as tape:
             #print('====================-')
             #print(trues)
-            outputs = self((inputs,dec_inputs),training=True)
+            outputs = self(train_data,training=True)
             loss = self.compiled_loss(
                 sft_trues,outputs,
                 regularization_losses=self.losses)
@@ -373,27 +369,30 @@ class Seq2seq(keras.Model):
 #        return (np.array(target_sentence), attention_plot)
 #
 #
-    def translate(self, sentence, dataset):
-        result, sentence, attention_plot = self.evaluate_sentence(sentence, dataset)
+    #def translate(self, sentence, dataset):
+    #    #sentence = dataset.preprocess_sentence(sentence)
+    #    #inputs = lang_tokenizer.texts_to_sequences([sentence])
+    #    result, sentence, attention_plot = self.evaluate_sentence(sentence, dataset)
 
-        print('Input: %s' % (sentence))
-        print('Predicted translation: {}'.format(result))
+    #    print('Input: %s' % (sentence))
+    #    print('Predicted translation: {}'.format(result))
 
-        attention_plot = attention_plot[:len(result.split(' ')), :len(sentence.split(' '))]
-        self.plot_attention(attention_plot, sentence.split(' '), result.split(' '))
+    #    attention_plot = attention_plot[:len(result.split(' ')), :len(sentence.split(' '))]
+    #    self.plot_attention(attention_plot, sentence.split(' '), result.split(' '))
 
-    def evaluate_sentence(self,sentence, dataset):
+    def evaluate_sequence(self,inputs):
         attention_plot = np.zeros((self.output_length, self.input_length))
 
-        sentence = dataset.preprocess_sentence(sentence)
+        #sentence = dataset.preprocess_sentence(sentence)
 
-        inputs = [inp_lang.word_index[i] for i in sentence.split(' ')]
-        inputs = tf.keras.preprocessing.sequence.pad_sequences([inputs],
+        ##inputs = [inp_lang.word_index[i] for i in sentence.split(' ')]
+        #inputs = lang_tokenizer.texts_to_sequences([sentence])
+        inputs = tf.keras.preprocessing.sequence.pad_sequences(inputs,
                                                          maxlen=self.input_length,
                                                          padding='post')
         inputs = tf.convert_to_tensor(inputs)
 
-        result = ''
+        result = []
 
         hidden = [tf.zeros((1, self.recurrent_units))]
         enc_out, enc_hidden = self.encoder(inputs, training=False, initial_state=hidden)
@@ -415,24 +414,22 @@ class Seq2seq(keras.Model):
 
             predicted_id = tf.argmax(predictions[0,0]).numpy()
 
-            if result!='':
-                result += ' '
-            result += targ_lang.index_word[predicted_id]
+            result.append(predicted_id)
 
-            if targ_lang.index_word[predicted_id] == '<end>':
-                return result, sentence, attention_plot
+            if self.end_voc_id == predicted_id:
+                break
 
             # the predicted ID is fed back into the model
             dec_input = tf.expand_dims([predicted_id], 0)
 
-        return result, sentence, attention_plot
+        #return result, sentence, attention_plot
+        return result, attention_plot
 
     # function for plotting the attention weights
     def plot_attention(self, attention, sentence, predicted_sentence):
         fig = plt.figure(figsize=(10,10))
         ax = fig.add_subplot(1, 1, 1)
-
-        attention = attention[:len(predicted_sentence), :len(sentence)]
+        #attention = attention[:len(predicted_sentence), :len(sentence)]
         ax.matshow(attention, cmap='viridis')
 
         fontdict = {'fontsize': 14}
@@ -460,18 +457,21 @@ def loss_function(real, pred):
 
 
 num_examples=5000#30000
-num_words = 500
+num_words = 256
 epochs = 10#10
 batch_size = 64
-word_vect_size=128#256
+word_vect_size=256#256
 recurrent_units=256#1024
 
 dataset = EngFraDataset()
 
 print("Generating data...")
 input_tensor, target_tensor, inp_lang, targ_lang = dataset.load_data(num_examples=num_examples,num_words=num_words)
-input_vocab_size = min(len(inp_lang.index_word)+1,num_words)
-target_vocab_size = min(len(targ_lang.index_word)+1,num_words)
+input_vocab_size = len(inp_lang.index_word)+1
+target_vocab_size = len(targ_lang.index_word)+1
+if num_words is not None:
+    input_vocab_size = min(input_vocab_size,num_words)
+    target_vocab_size = min(target_vocab_size,num_words)
 
 #print ("Input Language; index to word mapping")
 #dataset.convert(inp_lang, input_tensor[0])
@@ -482,12 +482,15 @@ target_vocab_size = min(len(targ_lang.index_word)+1,num_words)
 
 
 corpus_size = len(input_tensor)
+print("num_examples:",num_examples)
+print("num_words:",num_words)
+print("epoch:",epochs)
 print("embedding_dim:",word_vect_size)
 print("units:",recurrent_units)
 print("Total questions:", corpus_size)
 #input_voc,target_voc,input_dic,target_dic=dataset.dicts()
-print("Input word dictionary:", input_vocab_size)
-print("Target word dictionary:",target_vocab_size)
+print("Input  word dictionary: %d(%d)" % (input_vocab_size,len(inp_lang.index_word)+1))
+print("Target word dictionary: %d(%d)" % (target_vocab_size,len(targ_lang.index_word)+1))
 # Explicitly set apart 10% for validation data that we never train over.
 #split_at = len(questions) - len(questions) // 10
 #(x_train, x_val) = questions[:split_at], questions[split_at:]
@@ -499,19 +502,17 @@ print("Input length:",input_length)
 print("Output length:",output_length)
 
 
-encoder = Encoder(input_length,input_vocab_size, word_vect_size, recurrent_units)
+encoder = Encoder(input_vocab_size, word_vect_size, recurrent_units)
 # sample input
 sample_input_batch = input_tensor[0:batch_size]
 sample_dec_input_batch = target_tensor[0:batch_size]
 sample_hidden = encoder.initialize_hidden_state(batch_size)
 sample_output, sample_hidden = encoder(sample_input_batch, sample_hidden)
 
-decoder = Decoder(output_length,target_vocab_size, word_vect_size, recurrent_units)
+decoder = Decoder(target_vocab_size, word_vect_size, recurrent_units)
 sample_decoder_output, _, _ = decoder(sample_dec_input_batch,True,
                                       initial_state=sample_hidden, enc_outputs=sample_output)
 print ('Decoder output shape: (batch_size, vocab size) {}'.format(sample_decoder_output.shape))
-
-#exit()
 
 seq2seq = Seq2seq(
     input_length=input_length,
@@ -519,6 +520,7 @@ seq2seq = Seq2seq(
     output_length=output_length,
     target_vocab_size=target_vocab_size,
     start_voc_id=targ_lang.word_index['<start>'],
+    end_voc_id=targ_lang.word_index['<end>'],
     word_vect_size=word_vect_size,
     recurrent_units=recurrent_units,
 )
@@ -527,24 +529,29 @@ seq2seq = Seq2seq(
 print("Compile model...")
 seq2seq.compile(
     #loss='sparse_categorical_crossentropy',
-    #loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    loss=loss_function,
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    #loss=loss_function,
     optimizer='adam',
     metrics=['accuracy'],
     )
 
-checkpoint_filepath = './seq2seq-attention-translation/ckpt'
 
-checkpoint = tf.keras.callbacks.ModelCheckpoint(
-    filepath=checkpoint_filepath,
-    save_weights_only=True,
-    monitor='val_accuracy',
-    mode='auto',
-    save_best_only=True)
+#sample_predict_output = seq2seq.predict(sample_input_batch)
+#print(sample_predict_output)
+#checkpoint_filepath = './seq2seq-attention-translation/ckpt'
+#
+#checkpoint = tf.keras.callbacks.ModelCheckpoint(
+#    filepath=checkpoint_filepath,
+#    save_weights_only=True,
+#    monitor='val_accuracy',
+#    mode='auto',
+#    save_best_only=True)
 
 #if os.path.exists(checkpoint_filepath):
 #    print("Loading weights")
 #    model.load_weights(checkpoint_filepath)
+
+#exit()
 
 print("Train model...")
 history = seq2seq.fit(
@@ -592,12 +599,34 @@ for i in range(10):
 
     #predict = model.predict(input)
     #predict_seq = np.argmax(predict[0].reshape(output_length,len(target_dic)),axis=1)
-    sentence = dataset.seq2str(question,inp_lang)
-    predict_seq = seq2seq.translate(sentence, dataset);
+    #sentence = dataset.seq2str(question,inp_lang)
+
+    #    result, sentence, attention_plot = self.evaluate_sentence(sentence, dataset)
+
+    #    print('Input: %s' % (sentence))
+    #    print('Predicted translation: {}'.format(result))
+
+    #    attention_plot = attention_plot[:len(result.split(' ')), :len(sentence.split(' '))]
+    #    self.plot_attention(attention_plot, sentence.split(' '), result.split(' '))
+
+
+    #sentence = inp_lang.sequences_to_texts()
+    #predict_seq = seq2seq.translate(sentence, dataset);
+    predict, attention_plot = seq2seq.evaluate_sequence([question])
     answer = target_tensor[idx]
-    sentence = dataset.seq2str(answer,targ_lang)
-    print('Target: %s' % (sentence))
+    sentence = inp_lang.sequences_to_texts([question])[0]
+    predicted_sentence = targ_lang.sequences_to_texts([predict])[0]
+    target_sentence = targ_lang.sequences_to_texts([answer])[0]
+    print('Input:',sentence)
+    print('Predict:',predicted_sentence)
+    print('Target:',target_sentence)
     print()
+    #attention_plot = attention_plot[:len(predicted_sentence.split(' ')), :len(sentence.split(' '))]
+    seq2seq.plot_attention(attention_plot, sentence.split(' '), predicted_sentence.split(' '))
+
+    #sentence = dataset.seq2str(answer,targ_lang)
+    #print('Target: %s' % (sentence))
+    #print()
 
 
 plt.plot(history.history['loss'],label='loss')

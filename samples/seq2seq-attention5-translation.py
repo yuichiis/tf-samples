@@ -53,30 +53,30 @@ class EngFraDataset:
         word_pairs = [[self.preprocess_sentence(w) for w in l.split('\t')]  for l in lines[:num_examples]]
         return zip(*word_pairs)
 
-    def tokenize(self, lang):
+    def tokenize(self, lang, num_words=None):
         lang_tokenizer = tf.keras.preprocessing.text.Tokenizer(
-        filters='')
+        num_words=num_words, filters='')
         lang_tokenizer.fit_on_texts(lang)
         tensor = lang_tokenizer.texts_to_sequences(lang)
         tensor = tf.keras.preprocessing.sequence.pad_sequences(tensor,
                                                          padding='post')
         return tensor, lang_tokenizer
 
-    def load_data(self, path=None, num_examples=None):
+    def load_data(self, path=None, num_examples=None, num_words=None):
         if path is None:
             path = self.download()
         # creating cleaned input, output pairs
         targ_lang, inp_lang = self.create_dataset(path, num_examples)
 
-        input_tensor, inp_lang_tokenizer = self.tokenize(inp_lang)
-        target_tensor, targ_lang_tokenizer = self.tokenize(targ_lang)
+        input_tensor, inp_lang_tokenizer = self.tokenize(inp_lang,num_words=num_words)
+        target_tensor, targ_lang_tokenizer = self.tokenize(targ_lang,num_words=num_words)
         choice = np.random.choice(len(input_tensor),len(input_tensor),replace=False)
         input_tensor = self.shuffle(input_tensor,choice)
         target_tensor = self.shuffle(target_tensor,choice)
 
         return input_tensor, target_tensor, inp_lang_tokenizer, targ_lang_tokenizer
 
-    def shuffle(self, tensor,choice):
+    def shuffle(self, tensor, choice):
         result = np.zeros_like(tensor)
         for i in range(len(tensor)):
             result[i,:] = tensor[choice[i],:]
@@ -86,6 +86,21 @@ class EngFraDataset:
         for t in tensor:
             if t!=0:
                 print ("%d ----> %s" % (t, lang.index_word[t]))
+
+    #def seq2str(self,sequence,lang):
+    #    result = ''
+    #    for word_id in sequence:
+    #        if word_id == 0:
+    #            break
+    #        else:
+    #            word = lang.index_word[word_id]
+    #            if result=='':
+    #                result = word
+    #            else:
+    #                result = result+' '+word
+    #            if word == '<end>':
+    #                return result
+    #    return result
 
     def seq2str(self,sequence,lang):
         result = ''
@@ -213,21 +228,23 @@ class Decoder(tf.keras.Model):
 class Seq2seq(tf.keras.Model):
     def __init__(self,
         input_length=None,
-        vocab_inp_size=None,
+        input_vocab_size=None,
         output_length=None,
-        vocab_tar_size=None,
+        target_vocab_size=None,
         embedding_dim=None,
         units=None,
         start_voc_id=None,
+        end_voc_id=None,
         **kwargs
     ):
         super(Seq2seq, self).__init__(**kwargs)
-        self.encoder = Encoder(vocab_inp_size, embedding_dim, units)
-        self.decoder = Decoder(vocab_tar_size, embedding_dim, units)
+        self.encoder = Encoder(input_vocab_size, embedding_dim, units)
+        self.decoder = Decoder(target_vocab_size, embedding_dim, units)
         self.input_length = input_length
         self.output_length = output_length
         self.start_voc_id = start_voc_id
-        self.units = units
+        self.end_voc_id = end_voc_id
+        self.recurrent_units = units
 
     def first_decoder_input(self,batch_size):
         start_dec_input = tf.expand_dims(
@@ -319,42 +336,88 @@ class Seq2seq(tf.keras.Model):
         self.compiled_metrics.update_state(sft_trues, outputs)
         return {m.name: m.result() for m in self.metrics}
 
-    def translate(self, sentence, dataset):
-        result, sentence, attention_plot = self.evaluate_sentence(sentence, dataset)
+#    def translate(self, sentence, dataset):
+#        result, sentence, attention_plot = self.evaluate_sentence(sentence, dataset)
+#
+#        print('Input: %s' % (sentence))
+#        print('Predicted translation: {}'.format(result))
+#
+#        attention_plot = attention_plot[:len(result.split(' ')), :len(sentence.split(' '))]
+#        self.plot_attention(attention_plot, sentence.split(' '), result.split(' '))
 
-        print('Input: %s' % (sentence))
-        print('Predicted translation: {}'.format(result))
+#    def evaluate_sentence(self,sentence, dataset):
+#        attention_plot = np.zeros((self.output_length, self.input_length))
+#
+#        sentence = dataset.preprocess_sentence(sentence)
+#
+#        inputs = [inp_lang.word_index[i] for i in sentence.split(' ')]
+#        inputs = tf.keras.preprocessing.sequence.pad_sequences([inputs],
+#                                                         maxlen=self.input_length,
+#                                                         padding='post')
+#        inputs = tf.convert_to_tensor(inputs)
+#
+#        result = ''
+#
+#        hidden = [tf.zeros((1, self.units))]
+#        enc_out, enc_hidden = self.encoder(inputs, hidden)
+#
+#        dec_hidden = enc_hidden
+#        dec_input = tf.expand_dims([self.start_voc_id], 0)
+#
+#        for t in range(self.output_length):
+#            predictions, dec_hidden = self.decoder(dec_input,
+#                                                         dec_hidden,
+#                                                         enc_out)
+#
+#            attention_weights = tf.matmul(dec_hidden,enc_out,transpose_b=True)
+#            #print('attention_weights',attention_weights.shape)
+#            attention_weights = tf.nn.softmax(attention_weights[0,0,:])
+#
+#            # storing the attention weights to plot later on
+#            attention_weights = tf.reshape(attention_weights, (-1, ))
+#            attention_plot[t] = attention_weights.numpy()
+#
+#            predicted_id = tf.argmax(predictions[0]).numpy()
+#
+#            if result!='':
+#                result += ' '
+#            result += targ_lang.index_word[predicted_id]
+#
+#            if targ_lang.index_word[predicted_id] == '<end>':
+#                return result, sentence, attention_plot
+#
+#            # the predicted ID is fed back into the model
+#            dec_input = tf.expand_dims([predicted_id], 0)
+#
+#        return result, sentence, attention_plot
 
-        attention_plot = attention_plot[:len(result.split(' ')), :len(sentence.split(' '))]
-        self.plot_attention(attention_plot, sentence.split(' '), result.split(' '))
-
-    def evaluate_sentence(self,sentence, dataset):
+    def evaluate_sequence(self,inputs):
         attention_plot = np.zeros((self.output_length, self.input_length))
 
-        sentence = dataset.preprocess_sentence(sentence)
+        #sentence = dataset.preprocess_sentence(sentence)
 
-        inputs = [inp_lang.word_index[i] for i in sentence.split(' ')]
-        inputs = tf.keras.preprocessing.sequence.pad_sequences([inputs],
+        ##inputs = [inp_lang.word_index[i] for i in sentence.split(' ')]
+        #inputs = lang_tokenizer.texts_to_sequences([sentence])
+        inputs = tf.keras.preprocessing.sequence.pad_sequences(inputs,
                                                          maxlen=self.input_length,
                                                          padding='post')
         inputs = tf.convert_to_tensor(inputs)
 
-        result = ''
+        result = []
 
-        hidden = [tf.zeros((1, self.units))]
+        hidden = [tf.zeros((1, self.recurrent_units))]
         enc_out, enc_hidden = self.encoder(inputs, hidden)
 
         dec_hidden = enc_hidden
         dec_input = tf.expand_dims([self.start_voc_id], 0)
 
         for t in range(self.output_length):
-            predictions, dec_hidden = self.decoder(dec_input,
-                                                         dec_hidden,
-                                                         enc_out)
-
             attention_weights = tf.matmul(dec_hidden,enc_out,transpose_b=True)
             #print('attention_weights',attention_weights.shape)
             attention_weights = tf.nn.softmax(attention_weights[0,0,:])
+
+            predictions, dec_hidden = self.decoder(
+                                            dec_input, dec_hidden, enc_out)
 
             # storing the attention weights to plot later on
             attention_weights = tf.reshape(attention_weights, (-1, ))
@@ -362,22 +425,22 @@ class Seq2seq(tf.keras.Model):
 
             predicted_id = tf.argmax(predictions[0]).numpy()
 
-            if result!='':
-                result += ' '
-            result += targ_lang.index_word[predicted_id]
+            result.append(predicted_id)
 
-            if targ_lang.index_word[predicted_id] == '<end>':
-                return result, sentence, attention_plot
+            if self.end_voc_id == predicted_id:
+                break
 
             # the predicted ID is fed back into the model
             dec_input = tf.expand_dims([predicted_id], 0)
 
-        return result, sentence, attention_plot
+        #return result, sentence, attention_plot
+        return result, attention_plot
 
     # function for plotting the attention weights
     def plot_attention(self, attention, sentence, predicted_sentence):
         fig = plt.figure(figsize=(10,10))
         ax = fig.add_subplot(1, 1, 1)
+        #attention = attention[:len(predicted_sentence), :len(sentence)]
         ax.matshow(attention, cmap='viridis')
 
         fontdict = {'fontsize': 14}
@@ -458,7 +521,7 @@ class Seq2seq(tf.keras.Model):
 
 
 num_examples = 5000#10000 #30000
-num_words = 500
+num_words = 128
 EPOCHS = 10#10
 BATCH_SIZE = 64
 embedding_dim = 128#128#256
@@ -468,7 +531,9 @@ units = 256#512#1024
 dataset = EngFraDataset()
 path_to_file = dataset.download()
 print("Generating data...")
-input_tensor, target_tensor, inp_lang, targ_lang = dataset.load_data(path_to_file, num_examples)
+input_tensor, target_tensor, inp_lang, targ_lang = dataset.load_data(path_to_file, num_examples,num_words=num_words)
+input_vocab_size = min(len(inp_lang.word_index)+1,num_words)
+target_vocab_size = min(len(targ_lang.word_index)+1,num_words)
 
 # Calculate max_length of the target tensors
 max_length_targ, max_length_inp = target_tensor.shape[1], input_tensor.shape[1]
@@ -490,14 +555,15 @@ print(len(input_tensor_train), len(target_tensor_train), len(input_tensor_val), 
 
 BUFFER_SIZE = len(input_tensor_train)
 #steps_per_epoch = len(input_tensor_train)//BATCH_SIZE
-print("embedding_dim: ",embedding_dim)
+print("num_examples:",num_examples)
+print('num_words:',num_words)
+print("epoch:",EPOCHS)
+print("embedding_dim:",embedding_dim)
 print("units: ",units)
-print("Input  length: ",max_length_inp)
-print("Target length: ",max_length_targ)
-vocab_inp_size = len(inp_lang.word_index)+1
-vocab_tar_size = len(targ_lang.word_index)+1
-print("Input vocabulary size : ",vocab_inp_size)
-print("Target vocabulary size: ",vocab_tar_size)
+print("Input  length:",max_length_inp)
+print("Target length:",max_length_targ)
+print("Input  word dictionary: %d(%d)" % (input_vocab_size,len(inp_lang.index_word)+1))
+print("Target word dictionary: %d(%d)" % (target_vocab_size,len(targ_lang.index_word)+1))
 
 example_dataset = tf.data.Dataset.from_tensor_slices((input_tensor_train, target_tensor_train)).shuffle(BUFFER_SIZE)
 example_dataset = example_dataset.batch(BATCH_SIZE, drop_remainder=True)
@@ -507,7 +573,7 @@ example_input_batch.shape, example_target_batch.shape
 
 
 
-encoder = Encoder(vocab_inp_size, embedding_dim, units)
+encoder = Encoder(input_vocab_size, embedding_dim, units)
 
 # sample input
 sample_hidden = encoder.initialize_hidden_state(BATCH_SIZE)
@@ -523,7 +589,7 @@ print ('Encoder Hidden state shape: (batch size, units) {}'.format(sample_hidden
 #print("Attention result shape: (batch size, units) {}".format(attention_result.shape))
 #print("Attention weights shape: (batch_size, sequence_length, 1) {}".format(attention_weights.shape))
 
-decoder = Decoder(vocab_tar_size, embedding_dim, units)
+decoder = Decoder(target_vocab_size, embedding_dim, units)
 
 
 sample_decoder_output, _ = decoder(tf.random.uniform((BATCH_SIZE, 1)),
@@ -546,26 +612,27 @@ def loss_function(real, pred):
 
   return tf.reduce_mean(loss_)
 
-checkpoint_dir = './seq2seq-attention5-translation/ckpt'
+#checkpoint_dir = './seq2seq-attention5-translation/ckpt'
 #checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
 #checkpoint = tf.train.Checkpoint(optimizer=optimizer,
 #                                 encoder=encoder,
 #                                 decoder=decoder)
-model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-    filepath=checkpoint_dir,
-    save_weights_only=True,
-    monitor='val_accuracy',
-    mode='auto',
-    save_best_only=True)
+#model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+#    filepath=checkpoint_dir,
+#    save_weights_only=True,
+#    monitor='val_accuracy',
+#    mode='auto',
+#    save_best_only=True)
 
 seq2seq = Seq2seq(
     input_length=max_length_inp,
-    vocab_inp_size=vocab_inp_size,
+    input_vocab_size=input_vocab_size,
     output_length=max_length_targ,
-    vocab_tar_size=vocab_tar_size,
+    target_vocab_size=target_vocab_size,
     embedding_dim=embedding_dim,
     units=units,
     start_voc_id=targ_lang.word_index['<start>'],
+    end_voc_id=targ_lang.word_index['<end>'],
 )
 
 print("Compile model...")
@@ -611,23 +678,37 @@ history = seq2seq.fit(
 #translate(u'¿todavia estan en casa?')
 # wrong translation
 #translate(u'trata de averiguarlo.')
+#for i in range(10):
+#    idx = np.random.randint(0,len(input_tensor))
+#    question = input_tensor[idx]
+#    #input = question.reshape(1,max_length_inp)
+#    #input = keras.utils.to_categorical(
+#    #    input.reshape(input.size,),
+#    #    num_classes=len(input_voc)
+#    #    ).reshape(input.shape[0],input.shape[1],len(input_voc))
+#
+#    #predict = model.predict(input)
+#    #predict_seq = np.argmax(predict[0].reshape(output_length,len(target_dic)),axis=1)
+#    sentence = dataset.seq2str(question,inp_lang)
+#    predict_seq = seq2seq.translate(sentence, dataset);
+#    answer = target_tensor[idx]
+#    sentence = dataset.seq2str(answer,targ_lang)
+#    print('Target: %s' % (sentence))
+#    print()
 for i in range(10):
     idx = np.random.randint(0,len(input_tensor))
     question = input_tensor[idx]
-    #input = question.reshape(1,max_length_inp)
-    #input = keras.utils.to_categorical(
-    #    input.reshape(input.size,),
-    #    num_classes=len(input_voc)
-    #    ).reshape(input.shape[0],input.shape[1],len(input_voc))
-
-    #predict = model.predict(input)
-    #predict_seq = np.argmax(predict[0].reshape(output_length,len(target_dic)),axis=1)
-    sentence = dataset.seq2str(question,inp_lang)
-    predict_seq = seq2seq.translate(sentence, dataset);
+    predict, attention_plot = seq2seq.evaluate_sequence([question])
     answer = target_tensor[idx]
-    sentence = dataset.seq2str(answer,targ_lang)
-    print('Target: %s' % (sentence))
+    sentence = inp_lang.sequences_to_texts([question])[0]
+    predicted_sentence = targ_lang.sequences_to_texts([predict])[0]
+    target_sentence = targ_lang.sequences_to_texts([answer])[0]
+    print('Input:',sentence)
+    print('Predict:',predicted_sentence)
+    print('Target:',target_sentence)
     print()
+    #attention_plot = attention_plot[:len(predicted_sentence.split(' ')), :len(sentence.split(' '))]
+    seq2seq.plot_attention(attention_plot, sentence.split(' '), predicted_sentence.split(' '))
 
 plt.plot(history.history['loss'],label='loss')
 plt.plot(history.history['accuracy'],label='accuracy')

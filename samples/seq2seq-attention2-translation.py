@@ -14,9 +14,9 @@ import os
 import io
 import time
 
-EPOCHS = 10#10
 num_examples = 5000 #30000
-num_words = 500
+num_words = 128
+EPOCHS = 10#10
 BATCH_SIZE = 64
 embedding_dim = 128#256
 units = 256#1024
@@ -102,6 +102,8 @@ def load_dataset(path, num_examples=None,num_words=None):
 #num_examples = 100#5000 #30000
 print("Generating data...")
 input_tensor, target_tensor, inp_lang, targ_lang = load_dataset(path_to_file, num_examples, num_words=num_words)
+vocab_inp_size = min(len(inp_lang.word_index)+1,num_words)
+vocab_tar_size = min(len(targ_lang.word_index)+1,num_words)
 
 # Calculate max_length of the target tensors
 max_length_targ, max_length_inp = target_tensor.shape[1], input_tensor.shape[1]
@@ -133,13 +135,13 @@ BUFFER_SIZE = len(input_tensor_train)
 steps_per_epoch = len(input_tensor_train)//BATCH_SIZE
 #embedding_dim = 128#256
 #units = 256#1024
-print('num_words',num_words)
-print("embedding_dim: ",embedding_dim)
-print("units: ",units)
-vocab_inp_size = len(inp_lang.word_index)+1
-vocab_tar_size = len(targ_lang.word_index)+1
-print("Input vocabulary size : ",vocab_inp_size)
-print("Target vocabulary size: ",vocab_tar_size)
+print("num_examples:",num_examples)
+print("num_words:",num_words)
+print("epoch:",EPOCHS)
+print("embedding_dim:",embedding_dim)
+print("units:",units)
+print("Input  vocabulary size:",vocab_inp_size)
+print("Target vocabulary size:",vocab_tar_size)
 
 dataset = tf.data.Dataset.from_tensor_slices((input_tensor_train, target_tensor_train)).shuffle(BUFFER_SIZE)
 dataset = dataset.batch(BATCH_SIZE, drop_remainder=True)
@@ -293,11 +295,11 @@ def loss_function(real, pred):
 
   return tf.reduce_mean(loss_)
 
-checkpoint_dir = './training_checkpoints'
-checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
-checkpoint = tf.train.Checkpoint(optimizer=optimizer,
-                                 encoder=encoder,
-                                 decoder=decoder)
+#checkpoint_dir = './training_checkpoints'
+#checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
+#checkpoint = tf.train.Checkpoint(optimizer=optimizer,
+#                                 encoder=encoder,
+#                                 decoder=decoder)
 
 @tf.function
 def train_step(inp, targ, enc_hidden):
@@ -358,10 +360,14 @@ for epoch in range(EPOCHS):
 def evaluate(sentence):
   attention_plot = np.zeros((max_length_targ, max_length_inp))
 
-  #sentence = preprocess_sentence(sentence)
+  sentence = preprocess_sentence(sentence)
 
-  inputs = [inp_lang.word_index[i] for i in sentence.split(' ')]
-  inputs = tf.keras.preprocessing.sequence.pad_sequences([inputs],
+  #inputs = [inp_lang.word_index[i] for i in sentence.split(' ')]
+  #inputs = tf.keras.preprocessing.sequence.pad_sequences([inputs],
+    #                                                     maxlen=max_length_inp,
+    #                                                     padding='post')
+  inputs = inp_lang.texts_to_sequences([sentence])
+  inputs = tf.keras.preprocessing.sequence.pad_sequences(inputs,
                                                          maxlen=max_length_inp,
                                                          padding='post')
   inputs = tf.convert_to_tensor(inputs)
@@ -419,11 +425,11 @@ def translate(sentence):
   print('Input: %s' % (sentence))
   print('Predicted translation: {}'.format(result))
 
-  attention_plot = attention_plot[:len(result.split(' ')), :len(sentence.split(' '))]
+  #attention_plot = attention_plot[:len(result.split(' ')), :len(sentence.split(' '))]
   plot_attention(attention_plot, sentence.split(' '), result.split(' '))
 
 # restoring the latest checkpoint in checkpoint_dir
-checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
+#checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
 
 for i in range(10):
     idx = np.random.randint(0,len(input_tensor))
