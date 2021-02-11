@@ -197,14 +197,15 @@ class Decoder(tf.keras.Model):
 
     # used for attention
     #self.attention = BahdanauAttention(self.dec_units)
-    self.attention = tf.keras.layers.Attention()
+    self.attention = tf.keras.layers.Attention()#return_attention_scores=True
 
   def call(self, x, hidden, enc_output):
 
     hidden = tf.expand_dims(hidden,1)
     # hidden shape == (batch_size, 1, hidden_size)
     # enc_output shape == (batch_size, max_length, hidden_size)
-    context_vector = self.attention([hidden, enc_output])
+    context_vector, attention_weights = self.attention(
+                        [hidden, enc_output], return_attention_scores=True)
     # context_vector shape == (batch_size, 1, hidden_size)
 
     # x shape after passing through embedding == (batch_size, 1, embedding_dim)
@@ -222,7 +223,7 @@ class Decoder(tf.keras.Model):
     # output shape == (batch_size, vocab)
     x = self.fc(output)
 
-    return x, state#, attention_weights
+    return x, state, attention_weights
 
 
 class Seq2seq(tf.keras.Model):
@@ -283,7 +284,8 @@ class Seq2seq(tf.keras.Model):
             # using teacher forcing
             dec_input = tf.expand_dims(targ[:, t], 1)
             # passing enc_output to the decoder
-            predictions, dec_hidden = self.decoder(dec_input, dec_hidden, enc_output)
+            predictions, dec_hidden, attention_weights = self.decoder(
+                                        dec_input, dec_hidden, enc_output)
             outs.append(predictions)
             #loss += loss_function(targ[:, t], predictions)
 
@@ -412,11 +414,11 @@ class Seq2seq(tf.keras.Model):
         dec_input = tf.expand_dims([self.start_voc_id], 0)
 
         for t in range(self.output_length):
-            attention_weights = tf.matmul(dec_hidden,enc_out,transpose_b=True)
+            #attention_weights = tf.matmul(dec_hidden,enc_out,transpose_b=True)
             #print('attention_weights',attention_weights.shape)
-            attention_weights = tf.nn.softmax(attention_weights[0,0,:])
+            #attention_weights = tf.nn.softmax(attention_weights[0,0,:])
 
-            predictions, dec_hidden = self.decoder(
+            predictions, dec_hidden, attention_weights = self.decoder(
                                             dec_input, dec_hidden, enc_out)
 
             # storing the attention weights to plot later on
@@ -520,20 +522,23 @@ class Seq2seq(tf.keras.Model):
 #print('sp=',len(sp))
 
 
-num_examples = 5000#10000 #30000
-num_words = 128
-EPOCHS = 10#10
+num_examples = 30000 #5000#10000 #30000
+num_words = None #128
+EPOCHS = 10
 BATCH_SIZE = 64
-embedding_dim = 128#128#256
-units = 256#512#1024
+embedding_dim = 256
+units = 1024
 
 # Try experimenting with the size of that dataset
 dataset = EngFraDataset()
 path_to_file = dataset.download()
 print("Generating data...")
 input_tensor, target_tensor, inp_lang, targ_lang = dataset.load_data(path_to_file, num_examples,num_words=num_words)
-input_vocab_size = min(len(inp_lang.word_index)+1,num_words)
-target_vocab_size = min(len(targ_lang.word_index)+1,num_words)
+input_vocab_size = len(inp_lang.index_word)+1
+target_vocab_size = len(targ_lang.index_word)+1
+if num_words is not None:
+    input_vocab_size = min(input_vocab_size ,num_words)
+    target_vocab_size = min(target_vocab_size,num_words)
 
 # Calculate max_length of the target tensors
 max_length_targ, max_length_inp = target_tensor.shape[1], input_tensor.shape[1]
@@ -558,6 +563,7 @@ BUFFER_SIZE = len(input_tensor_train)
 print("num_examples:",num_examples)
 print('num_words:',num_words)
 print("epoch:",EPOCHS)
+print("batch_size:",BATCH_SIZE)
 print("embedding_dim:",embedding_dim)
 print("units: ",units)
 print("Input  length:",max_length_inp)
@@ -592,7 +598,7 @@ print ('Encoder Hidden state shape: (batch size, units) {}'.format(sample_hidden
 decoder = Decoder(target_vocab_size, embedding_dim, units)
 
 
-sample_decoder_output, _ = decoder(tf.random.uniform((BATCH_SIZE, 1)),
+sample_decoder_output, _, _ = decoder(tf.random.uniform((BATCH_SIZE, 1)),
                                       sample_hidden, sample_output)
 
 print ('Decoder output shape: (batch_size, vocab size) {}'.format(sample_decoder_output.shape))

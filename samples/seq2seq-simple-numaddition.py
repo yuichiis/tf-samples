@@ -1,5 +1,5 @@
-import os
-import pickle
+#import os
+#import pickle
 from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
@@ -7,10 +7,13 @@ from numpy import ndarray
 import matplotlib.pyplot as plt
 
 # Parameters for the model and dataset.
-#TRAINING_SIZE = 50000
-TRAINING_SIZE = 5000
 DIGITS = 3
+TRAINING_SIZE = 5000
 REVERSE = True
+EPOCHS = 30
+BATCH_SIZE = 32
+UNITS = 128
+WORDVECT_SIZE = 16
 
 # Generate the data
 class NumAdditionDataset:
@@ -123,16 +126,16 @@ class NumAdditionDataset:
         self,
         path: str=None) -> ndarray:
         '''load dataset'''
-        if path is None:
-            path='numaddition-dataset.pkl'
+        #if path is None:
+        #    path='numaddition-dataset.pkl'
 
-        if os.path.exists(path):
-            with open(path,'rb') as fp:
-                dataset = pickle.load(fp)
-        else:
-            dataset = self.generate()
-            with open(path,'wb') as fp:
-                pickle.dump(dataset,fp)
+        #if os.path.exists(path):
+        #    with open(path,'rb') as fp:
+        #        dataset = pickle.load(fp)
+        #else:
+        dataset = self.generate()
+        #    with open(path,'wb') as fp:
+        #        pickle.dump(dataset,fp)
         return dataset
 
 
@@ -200,25 +203,14 @@ print(y_val.shape)
 print("Build model...")
 
 model = keras.Sequential([
-    layers.Embedding(len(input_dic), 16),
+    layers.Embedding(len(input_dic), WORDVECT_SIZE),
     #keras.Input(shape=(input_length,len(input_dic))),
     # Encoder
-    layers.GRU(128,go_backwards=REVERSE),
-    #layers.LSTM(128,go_backwards=REVERSE),
-    #layers.SimpleRNN(128,go_backwards=REVERSE),
-    #layers.Conv1D(128,kernel_size=3,activation='relu'),
-    #layers.MaxPooling1D(),
-    #layers.Conv1D(128,kernel_size=3,activation='relu'),
-    #layers.MaxPooling1D(),
-    #layers.Flatten(),
-    #layers.Dense(1024,activation='relu'),
+    layers.GRU(UNITS,go_backwards=REVERSE),
     # Expand to answer length and peeking hidden states
     layers.RepeatVector(output_length),
     # Decoder
-    layers.GRU(128, return_sequences=True),
-    #layers.LSTM(128, return_sequences=True),
-    #layers.SimpleRNN(128, return_sequences=True),
-    #layers.Dense(128,activation='relu'),
+    layers.GRU(UNITS, return_sequences=True),
     # Output
     layers.Dense(
         len(target_dic),
@@ -226,24 +218,26 @@ model = keras.Sequential([
     ),
 ])
 
+def sequence_metrics(y_true, y_pred):
+    y_pred = tf.reduce_max(y_pred, axis=-1)
+    squared_difference = tf.reduce_sum(tf.math.equal(y_true, y_pred), axis=-1)
+    return tf.reduce_mean(squared_difference, axis=-1)  # Note the `axis=-1`
+
 model.compile(
     #loss="sparse_categorical_crossentropy",
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer="adam",
-    metrics=["accuracy"])
+    metrics={"accuracy": sequence_metrics})
 model.summary()
 
 # Train the model
-
-epochs = 30
-batch_size = 32
 
 #callback = CustomCallback()
 history = model.fit(
     x_train,
     y_train,
-    batch_size=batch_size,
-    epochs=epochs,
+    batch_size=BATCH_SIZE,
+    epochs=EPOCHS,
     validation_data=(x_val, y_val),
     #callbacks=[callback],
 )

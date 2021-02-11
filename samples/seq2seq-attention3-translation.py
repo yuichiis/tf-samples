@@ -522,20 +522,25 @@ class Seq2seq(tf.keras.Model):
 #print('sp=',len(sp))
 
 
-num_examples = 5000 #30000
-num_words = 128
-EPOCHS = 10#30#10
+num_examples = 30000
+num_words = None
+EPOCHS = 10
 BATCH_SIZE = 64
-embedding_dim = 128#256
-units = 256#1024
+embedding_dim = 256
+units = 1024
 
 # Try experimenting with the size of that dataset
 tr_dataset = EngFraDataset()
 path_to_file = tr_dataset.download()
 print("Generating data...")
 input_tensor, target_tensor, inp_lang, targ_lang = tr_dataset.load_data(path_to_file, num_examples,num_words=num_words)
-input_vocab_size = min(len(inp_lang.index_word)+1,num_words)
-target_vocab_size = min(len(targ_lang.index_word)+1,num_words)
+if num_words is None:
+    input_vocab_size = len(inp_lang.index_word)+1
+    target_vocab_size = len(targ_lang.index_word)+1
+else:
+    input_vocab_size = min(len(inp_lang.index_word)+1,num_words)
+    target_vocab_size = min(len(targ_lang.index_word)+1,num_words)
+
 
 # Calculate max_length of the target tensors
 max_length_targ, max_length_inp = target_tensor.shape[1], input_tensor.shape[1]
@@ -560,6 +565,7 @@ BUFFER_SIZE = len(input_tensor_train)
 print("num_examples:",num_examples)
 print("num_words:",num_words)
 print("epoch:",EPOCHS)
+print("batch_size:",BATCH_SIZE)
 print("embedding_dim:",embedding_dim)
 print("units:",units)
 print("Input  length:",max_length_inp)
@@ -644,7 +650,7 @@ seq2seq.compile(
     loss=loss_function,
     optimizer='adam',
     metrics=['accuracy'],
-    )
+)
 
 #exit()
 

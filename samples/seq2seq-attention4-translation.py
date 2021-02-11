@@ -392,7 +392,7 @@ def create_seq2seq(
     ):
     encoder = Encoder(vocab_inp_size, embedding_dim, units)
     decoder = Decoder(vocab_tar_size, embedding_dim, units)
-    attention_layer = BahdanauAttention(10)
+    #attention_layer = BahdanauAttention(10)
 
     inp = tf.keras.Input(shape=(max_length_inp,))
     targ = tf.keras.Input(shape=(max_length_targ,))

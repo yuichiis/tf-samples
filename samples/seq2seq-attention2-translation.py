@@ -14,12 +14,12 @@ import os
 import io
 import time
 
-num_examples = 5000 #30000
-num_words = 128
+num_examples = 30000
+num_words = None#2048
 EPOCHS = 10#10
 BATCH_SIZE = 64
-embedding_dim = 128#256
-units = 256#1024
+embedding_dim = 256
+units = 1024
 
 
 # Download the file
@@ -102,8 +102,12 @@ def load_dataset(path, num_examples=None,num_words=None):
 #num_examples = 100#5000 #30000
 print("Generating data...")
 input_tensor, target_tensor, inp_lang, targ_lang = load_dataset(path_to_file, num_examples, num_words=num_words)
-vocab_inp_size = min(len(inp_lang.word_index)+1,num_words)
-vocab_tar_size = min(len(targ_lang.word_index)+1,num_words)
+if num_words is None:
+    vocab_inp_size = len(inp_lang.word_index)+1
+    vocab_tar_size = len(targ_lang.word_index)+1
+else:
+    vocab_inp_size = min(len(inp_lang.word_index)+1,num_words)
+    vocab_tar_size = min(len(targ_lang.word_index)+1,num_words)
 
 # Calculate max_length of the target tensors
 max_length_targ, max_length_inp = target_tensor.shape[1], input_tensor.shape[1]
@@ -138,6 +142,7 @@ steps_per_epoch = len(input_tensor_train)//BATCH_SIZE
 print("num_examples:",num_examples)
 print("num_words:",num_words)
 print("epoch:",EPOCHS)
+print("batch_size:",BATCH_SIZE)
 print("embedding_dim:",embedding_dim)
 print("units:",units)
 print("Input  vocabulary size:",vocab_inp_size)
